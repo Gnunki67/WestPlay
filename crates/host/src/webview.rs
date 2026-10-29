@@ -582,6 +582,7 @@ impl OffscreenWebView {
     }
 
     /// Serves `folder` at `https://{host_name}/`, to the page served from it.
+    #[cfg(test)]
     pub fn map_folder(&self, host_name: &str, folder: &Path) -> windows::core::Result<()> {
         self.serve(host_name, folder, false)
     }
@@ -812,8 +813,8 @@ mod tests {
             console.error = (...a) => { __errors.push('console: ' + a.map(String).join(' ')); error(...a) };"#,
         )
         .unwrap();
-        view.map_folder("westplay.cabin", Path::new(&ui)).unwrap();
-        view.navigate("https://westplay.cabin/cabin.html").unwrap();
+        let local = crate::local_server::LocalServer::start_for_test(Path::new(&ui)).unwrap();
+        view.navigate(&format!("{}/cabin.html", local.url)).unwrap();
         // As the host goes on (crate::run): the maps' and the player's own looks' folders, mapped as the page loads.
         for (host, name) in [("westplay.maps", "maps"), ("westplay.customize", "customize")] {
             let dir = std::env::temp_dir().join(format!("westplay-built-cab-{name}-{}", std::process::id()));
@@ -832,6 +833,8 @@ mod tests {
             )
             .unwrap();
         println!("page messages: {:?}\n{state}", view.take_page_messages());
+        assert!(state.contains("\"shell\":true"), "the packaged cabin must render: {state}");
+        assert!(state.contains("\"errors\":[]"), "the packaged cabin must have no script errors: {state}");
     }
 
     /// Signing out: a cookie set by a page is gone once `delete_cookies` comes back, for the page loaded right
@@ -987,6 +990,31 @@ mod tests {
             heard.push(ears.iter().take(2).any(|ear| *ear > 0.0005));
         }
         assert_eq!(heard, [true, true, true], "silent through the speakers at some point (a, b, then a again)");
+        // Radio FM reuses this exact graph for its stream and reception static.
+        let measure = || {
+            let result = view.evaluate("JSON.stringify(window.level() ?? null)").unwrap();
+            serde_json::from_str::<String>(&result)
+                .ok()
+                .and_then(|text| serde_json::from_str::<Vec<f64>>(&text).ok())
+                .unwrap_or_default()
+                .into_iter()
+                .take(2)
+                .fold(0.0, f64::max)
+        };
+        let inside = measure();
+        view.evaluate("cab.outside(true, 8)").unwrap();
+        pump(0.5);
+        let outside = measure();
+        view.evaluate("cab.outside(true, 20)").unwrap();
+        pump(0.5);
+        let far = measure();
+        view.evaluate("cab.outside(false, 0)").unwrap();
+        pump(0.5);
+        let back = measure();
+        println!("cab sound: inside={inside}, outside 8m={outside}, outside 20m={far}, back={back}");
+        assert!(outside < inside * 0.3, "outside the cab should be quieter and low-pass filtered");
+        assert!(far < 0.0005, "radio should fade to silence at 20m");
+        assert!(back > inside * 0.7, "full cabin sound should return");
     }
 
     #[test]

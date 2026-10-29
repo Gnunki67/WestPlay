@@ -27,6 +27,7 @@ export type Key =
 
 const LETTERS: Record<Language, readonly string[]> = {
   en: ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'],
+  pl: ['qwertyuiopó', 'asdfghjklłąę', 'zxcvbnmćńśźż'],
   tr: ['qwertyuıopğü', 'asdfghjklşi', 'zxcvbnmöç'],
 }
 
@@ -53,10 +54,10 @@ export function keyRows(language: Language, layer: Layer): Key[][] {
 
 /** A letter in capitals, by its language's rules. */
 export function capital(char: string, language: Language): string {
-  return char.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-GB')
+  return char.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : language === 'pl' ? 'pl-PL' : 'en-GB')
 }
 
 /** The other language, for the globe key. */
 export function otherLanguage(language: Language): Language {
-  return language === 'tr' ? 'en' : 'tr'
+  return language === 'pl' ? 'en' : language === 'tr' ? 'en' : 'pl'
 }

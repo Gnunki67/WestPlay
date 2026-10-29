@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import {
   type Equalizer,
+  type CabSound,
   FLAT,
   type HostMessage,
   type GameWeather,
@@ -80,6 +81,8 @@ interface CabinState {
    * (Recommended, flat): kept with WestPlay's settings, the host sends them. */
   equalizer: Equalizer
   equalizerCustom: boolean
+  autoplay: boolean
+  setAutoplay(enabled: boolean): void
   power: PowerState
   /**
    * The screen is handed back to the truck (its stock screen shows, with WestPlay's button to come back),
@@ -126,6 +129,11 @@ export const useCabin = create<CabinState>()(
       oemMode: 'auto',
       equalizer: FLAT,
       equalizerCustom: false,
+      autoplay: true,
+      setAutoplay: (enabled) => {
+        set({ autoplay: enabled })
+        if (isInHost()) postToHost({ type: 'autoplay', enabled })
+      },
       power: INITIAL_POWER,
       navigate: (action) => set((state) => ({ navigation: navigate(state.navigation, action) })),
       setAppearanceMode: (appearanceMode) => set({ appearanceMode }),
@@ -282,6 +290,7 @@ export interface LiveState {
   spectrum: readonly number[]
   /** The host draws the screen's cursor (`cursor` message): the page draws none of its own then. */
   cursorByHost: boolean
+  cabSound: CabSound | null
 }
 
 /** TruckersMP's players around the player, from its SDK: its game server's id, the player's own number on it,
@@ -315,6 +324,7 @@ export const useLive = create<LiveState>()(() => ({
   nearby: null,
   spectrum: [],
   cursorByHost: false,
+  cabSound: null,
 }))
 
 /** Plain browser previews have no game to report the screen: `?layout=scania-2025` stands in for it. */
@@ -361,6 +371,9 @@ export function connectHost(now: () => number = () => performance.now()): () => 
 function receiveHostMessage(now: () => number): (message: HostMessage) => void {
   return (message) => {
     switch (message.type) {
+      case 'cabSound':
+        useLive.setState({ cabSound: message })
+        break
       case 'telemetry': {
         const previous = useLive.getState().telemetry
         useLive.setState({ telemetry: message.data })
@@ -461,6 +474,7 @@ function receiveHostMessage(now: () => number): (message: HostMessage) => void {
         useCabin.setState({
           equalizer: toEqualizer(message.equalizer),
           equalizerCustom: message.equalizerCustom === true,
+          autoplay: message.autoplay !== false,
         })
         setIcons({
           iconSet: message.iconSet ?? null,

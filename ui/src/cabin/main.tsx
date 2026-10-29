@@ -14,6 +14,9 @@ import './shell/apple.css'
 // Development builds expose the stores for console debugging and browser previews (`westplay.cabin`).
 if (import.meta.env.DEV) {
   Object.assign(window, { westplay: { cabin: useCabin, live: useLive } })
+  if (new URLSearchParams(location.search).has('radio-test')) {
+    void import('./apps/localRadio/previewControls').then((preview) => preview.radioPreviewControls())
+  }
 }
 
 installDemo()

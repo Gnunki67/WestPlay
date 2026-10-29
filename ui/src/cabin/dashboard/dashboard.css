@@ -116,6 +116,15 @@
   object-fit: cover;
 }
 
+/* Station marks have arbitrary aspect ratios; keep the complete logo inside its tile. */
+.radio-now-playing .art {
+  background: #fff;
+}
+.radio-now-playing .art img {
+  object-fit: contain;
+  padding: 7px;
+}
+
 .now-playing .art-placeholder {
   display: grid;
   width: 100%;

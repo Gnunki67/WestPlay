@@ -55,11 +55,14 @@ const UPDATE: Offer | null = query.has('update')
   : null
 
 let settings: Settings = {
+  autoplay: { enabled: true },
   interaction: { key: 0xa4, mode: 'hold', sensitivity: 1.4 },
   keybinds: {
     volumeDown: { key: 0x31, withInteractionKey: true },
     playPause: { key: 0x32, withInteractionKey: true },
     volumeUp: { key: 0x33, withInteractionKey: true },
+    previous: { key: 0x34, withInteractionKey: true },
+    next: { key: 0x35, withInteractionKey: true },
   },
   screen: { truckStrip: 'auto' },
   look: { wallpaper: null, iconSet: null, iconStyle: 'auto' },

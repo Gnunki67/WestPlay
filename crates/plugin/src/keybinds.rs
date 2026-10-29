@@ -33,7 +33,12 @@ pub fn on_frame() {
             continue;
         };
         // SAFETY: a plain query, no pointers.
-        let down = unsafe { GetAsyncKeyState(key as i32) } as u16 & 0x8000 != 0;
+        let down = if westplay_shared::controller::decode(key).is_some() {
+            westplay_shared::controller::down(key)
+        } else {
+            // SAFETY: a plain key-state query, no pointers.
+            (unsafe { GetAsyncKeyState(key as i32) }) as u16 & 0x8000 != 0
+        };
         // First: every frame's key state is kept, whether the press counts or not.
         if input::newly_down(&WAS_DOWN[i], down) && in_game && counts(with_interaction_key) {
             bridge.plugin.keybind_presses[i].fetch_add(1, Ordering::AcqRel);

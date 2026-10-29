@@ -136,7 +136,8 @@ pub async fn setup_state(store: State<'_, SetupStore>) -> Result<SetupState, Str
         let game = record.game.as_deref().and_then(Game::recognise);
         Ok(SetupState {
             finished: record.finished,
-            updated: game.is_some() && record.finished && is_update(record.version.as_deref()),
+            updated: record.finished
+                && game.as_ref().is_some_and(|game| is_update(&inner, game, record.version.as_deref())),
             game: game.as_ref().map(GameInfo::from),
             found: found.iter().map(GameInfo::from).collect(),
             game_running: game::running(),
@@ -524,10 +525,19 @@ fn install_plugin(game: &Game, ours: &Path, administrator: bool) -> PluginOutcom
 /// This WestPlay's version.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Whether this WestPlay is another version than the one that put its plugin and mod into the game
-/// (`installed_by`; none: one from before versions were kept). Never in a development build.
-fn is_update(installed_by: Option<&str>) -> bool {
-    !cfg!(debug_assertions) && installed_by != Some(VERSION)
+/// Whether the game needs this build's plugin and mod: a different release or different DLL,
+/// including local builds sharing a version number. Never in a development build.
+fn is_update(inner: &Inner, game: &Game, installed_by: Option<&str>) -> bool {
+    if cfg!(debug_assertions) {
+        return false;
+    }
+    let Some(ours) = inner.plugin.as_deref() else {
+        return true;
+    };
+    plugin::requires_update(game, ours, installed_by, VERSION).unwrap_or_else(|error| {
+        log!("setup: couldn't verify the installed plugin: {error}");
+        true
+    })
 }
 
 /// The onboarding was gone through to its end.

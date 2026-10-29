@@ -690,12 +690,14 @@ export function useNow(running: boolean): number {
 /** While the app is open: Spotify's web player runs (hidden, under the page) and says whether it's signed
  * in. */
 export function useWebPlayer(): void {
-  useEffect(() => {
-    if (!isInHost()) return
-    // The volume kept from last time, for when it plays here (receivePlayback).
-    volumeToGiveBack = true
-    spotify({ action: 'start' })
-  }, [])
+  useEffect(() => startWebPlayer(), [])
+}
+
+/** Start from either the app or ignition, restoring the chosen volume in both cases. */
+export function startWebPlayer(): void {
+  if (!isInHost()) return
+  volumeToGiveBack = true
+  spotify({ action: 'start' })
 }
 
 /** While the app is open in a plain browser: the preview's songs end by themselves, the next one starting

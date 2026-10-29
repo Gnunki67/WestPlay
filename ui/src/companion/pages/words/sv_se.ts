@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Höj volymen',
     volumeDown: 'Sänk volymen',
     playPause: 'Spela/Pausa',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Tryck på en tangent…',
     keybindsNote:
       'Klicka på ett kortkommando och tryck sedan på den nya tangenten. Håller du ned {key} samtidigt fungerar det bara medan du använder skärmen. Esc avbryter.',

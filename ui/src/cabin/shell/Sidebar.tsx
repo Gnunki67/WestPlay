@@ -12,6 +12,7 @@ import { cabClock } from '../../shared/host'
  * button (back to the truck's own screen, like CarPlay's car button) and the Home button.
  */
 export function Sidebar() {
+  const text = useText()
   const recents = useCabin((state) => state.navigation.recents)
   const route = useCabin((state) => state.navigation.route)
   const homeTarget = useCabin((state) => homeButtonTarget(state.navigation))
@@ -28,7 +29,7 @@ export function Sidebar() {
           <SignalBars /> 5G
         </div>
       </div>
-      <nav className="recent" aria-label="Recent apps">
+      <nav className="recent" aria-label={text.shell.recentApps}>
         {recents.slice(0, shown).map((app) => (
           <RecentApp key={app} app={app} current={route.kind === 'app' && route.app === app} />
         ))}
@@ -37,7 +38,7 @@ export function Sidebar() {
         <button
           type="button"
           className="sidebar-button"
-          aria-label="Truck screen"
+          aria-label={text.shell.truckScreen}
           onClick={() => useCabin.getState().setTruckScreen(true)}
         >
           <TruckGlyph />
@@ -46,7 +47,7 @@ export function Sidebar() {
         <button
           type="button"
           className="sidebar-button home-button"
-          aria-label={homeTarget === 'home' ? 'Home' : 'Dashboard'}
+          aria-label={homeTarget === 'home' ? text.shell.home : text.shell.dashboard}
           onClick={() => go({ type: 'pressHome' })}
         >
           <GridGlyph shown={homeTarget === 'home'} />

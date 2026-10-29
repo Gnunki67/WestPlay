@@ -54,8 +54,9 @@ export function Cover({
 
 /** The "E" of an explicit song or album. */
 export function Explicit() {
+  const text = useText()
   return (
-    <span className="ytm-explicit" aria-label="Explicit">
+    <span className="ytm-explicit" aria-label={text.appleMusic.explicit}>
       E
     </span>
   )

@@ -234,3 +234,13 @@ game's model format and turned landscape (`tools/dev/tablet_model.py`); its grou
 picture left out; its parts coloured from one small texture; WestPlay's screen shown on its glass, and a stand
 and a hanging bar added (`crates/setup/src/tablet.rs`). The tablet's model descriptor is laid out as Kedi739's
 tablet mod's was, used with his permission.
+
+# Local Radio integration
+
+The Local Radio station/transmitter data, station artwork, static audio and adapted reception model come from the user-supplied ETS2/ATS Local Radio source archive (Koenvh1/ets2-local-radio and its contributors), under MPL-2.0. The bundled files include `local-radio/LICENSE.md` and `local-radio/NOTICE.md`.
+
+HLS playback uses hls.js (video-dev/hls.js), under the Apache License 2.0. Its license is included at `local-radio/HLS-LICENSE.txt`.
+
+## Truck brand logos
+
+The removable `ui/public/brand-logos` assets retain the truck makers' names and trademarks. They are used to identify the truck during startup and do not imply endorsement by the manufacturers.

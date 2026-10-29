@@ -94,9 +94,13 @@ export const words: CompanionWords = {
     volumeUp: 'Głośniej',
     volumeDown: 'Ciszej',
     playPause: 'Odtwórz/Wstrzymaj',
-    pressKey: 'Naciśnij klawisz…',
+    next: 'Następny utwór',
+    previous: 'Poprzedni utwór',
+    autoplay: 'Automatyczne odtwarzanie',
+    autoplayDetail: 'Wznawiaj ostatnie źródło muzyki po animacji startowej przy włączeniu zapłonu.',
+    pressKey: 'Naciśnij klawisz lub przycisk kontrolera…',
     keybindsNote:
-      'Kliknij skrót, a potem naciśnij nowy klawisz. Jeśli przytrzymasz przy tym {key}, zadziała tylko podczas używania ekranu. Esc anuluje.',
+      'Kliknij skrót głośności lub odtwarzania, a potem naciśnij klawisz albo przycisk pada/kierownicy. Jeśli przytrzymasz przy tym {key}, skrót zadziała tylko podczas używania ekranu. Esc anuluje. Przypisane przyciski kontrolera powinny być wolne w ustawieniach gry.',
     inUse: 'Ten klawisz jest już używany: {action}.',
   },
   accounts: {

@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Усилване',
     volumeDown: 'Намаляване',
     playPause: 'Пускане/Пауза',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Натиснете клавиш…',
     keybindsNote:
       'Щракнете върху комбинация и натиснете новия клавиш. Ако задържите {key}, докато го натискате, тя работи само докато ползвате екрана. Esc отказва.',

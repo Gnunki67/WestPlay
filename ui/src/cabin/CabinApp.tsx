@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { isInHost, postToHost } from '../shared/host'
 import { appleMusicPlayer, pauseAppleMusicWithGame } from './apps/music/pauseWithGame'
 import { keybinds } from './apps/keybinds'
+import { followAutoplay } from './apps/autoplay'
 import { oneAtATime } from './apps/oneAtATime'
 import { pauseSpotifyWithGame, spotifyPlayer } from './apps/spotify/pauseWithGame'
 import { pauseYouTubeWithGame, youtubePlayer } from './apps/youtube/pauseWithGame'
@@ -20,8 +21,10 @@ import { type Route, routeKey } from './state/navigation'
 import { nextPhaseAt, type PowerPhase } from './state/power'
 import { meterFrames } from './state/frameMeter'
 import { connectHost, useCabin, useLive } from './state/store'
-import { languageOf } from './state/strings'
+import { useLanguage } from './state/text'
 import { followTimeZone } from './state/timeZone'
+import { followRadio, radioPlayer } from './apps/localRadio/radio'
+import { pauseMusicWithGame } from './apps/musicWithGame'
 
 /**
  * Plain browser previews have no truck to power the screen; they show it as if the electrics were on.
@@ -34,15 +37,18 @@ export function CabinApp() {
   const route = useCabin((state) => state.navigation.route)
   const phase = useCabin((state) => state.power.phase)
   useEffect(() => connectHost(), [])
+  useEffect(() => followRadio(), [])
+  useEffect(() => pauseMusicWithGame(radioPlayer), [])
   // YouTube, Spotify, Apple Music and YouTube Music pause with the game (its menu, tabbing out) and play on after.
   useEffect(() => pauseYouTubeWithGame(), [])
   useEffect(() => pauseSpotifyWithGame(), [])
   useEffect(() => pauseAppleMusicWithGame(), [])
   useEffect(() => pauseYouTubeMusicWithGame(), [])
   // One of them at a time: the newest to start plays on, the others pause (apps/oneAtATime.ts).
-  useEffect(() => oneAtATime([youtubePlayer, spotifyPlayer, appleMusicPlayer, youtubeMusicPlayer]), [])
+  useEffect(() => oneAtATime([youtubePlayer, spotifyPlayer, appleMusicPlayer, youtubeMusicPlayer, radioPlayer]), [])
   // The player's keybinds pressed in the game: the music's volume, or play/pause (apps/keybinds.ts).
   useEffect(() => followKeybinds(), [])
+  useEffect(() => followAutoplay(), [])
   // The clock where the truck is: its country's time zone, as the game's own clock (state/timeZone.ts).
   useEffect(() => followTimeZone(), [])
   // TruckersMP: its other players, read while the game runs under it (the map's dots, a route's traffic).
@@ -53,7 +59,7 @@ export function CabinApp() {
   // Lists follow a drag, as on a touch screen (the cab has a mouse).
   useEffect(() => installDragScroll(), [])
   // The page's language, so text set in capitals follows its rules (Turkish: i to İ, not I).
-  const language = languageOf(useLive((state) => state.gameLanguage))
+  const language = useLanguage()
   useEffect(() => {
     document.documentElement.lang = language
   }, [language])
@@ -84,7 +90,7 @@ export function CabinApp() {
 /** Acts on each keybind pressed in the game, for the cab's players, showing a volume it sets. Returns the
  * function that stops it. */
 function followKeybinds(): () => void {
-  const binds = keybinds([youtubePlayer, spotifyPlayer, appleMusicPlayer, youtubeMusicPlayer])
+  const binds = keybinds([youtubePlayer, spotifyPlayer, appleMusicPlayer, youtubeMusicPlayer, radioPlayer])
   const stop = useLive.subscribe((live, before) => {
     if (!live.keybind || live.keybind.count === before.keybind?.count) return
     const shown = binds.press(live.keybind.action)

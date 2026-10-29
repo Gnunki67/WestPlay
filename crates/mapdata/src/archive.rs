@@ -54,6 +54,7 @@ pub fn salted_path_hash(path: &str, salt: u16) -> u64 {
 }
 
 pub struct Archive {
+    root: String,
     path: PathBuf,
     file: File,
     /// HashFS's version (1 or 2), or 0 for a zip.
@@ -195,7 +196,15 @@ impl Archive {
         let header = &header[..read];
         if header.starts_with(ZIP_LOCAL) || header.starts_with(ZIP_EMPTY) {
             let (entries, listings) = zip_entries(&file)?;
-            return Ok(Self { path: path.to_owned(), file, version: 0, salt: 0, entries, listings });
+            return Ok(Self {
+                root: String::new(),
+                path: path.to_owned(),
+                file,
+                version: 0,
+                salt: 0,
+                entries,
+                listings,
+            });
         }
         let mut r = Reader::new(header);
         if r.bytes(4)? != MAGIC {
@@ -231,7 +240,13 @@ impl Archive {
             }
             other => return Err(ArchiveError::UnsupportedVersion(other)),
         };
-        Ok(Self { path: path.to_owned(), file, version, salt, entries, listings: HashMap::new() })
+        Ok(Self { root: String::new(), path: path.to_owned(), file, version, salt, entries, listings: HashMap::new() })
+    }
+
+    /// Mount a game mod package's base or DLC directory at the virtual root.
+    pub fn rooted(mut self, root: &str) -> Self {
+        self.root = root.trim_matches('/').to_owned();
+        self
     }
 
     pub fn path(&self) -> &Path {
@@ -248,7 +263,11 @@ impl Archive {
 
     /// Where `path`'s entry is in this archive (its salt, if it has one).
     fn hash(&self, path: &str) -> u64 {
-        salted_path_hash(path, self.salt)
+        if self.root.is_empty() {
+            salted_path_hash(path, self.salt)
+        } else {
+            salted_path_hash(&format!("{}/{}", self.root, path.trim_matches('/')).trim_end_matches('/'), self.salt)
+        }
     }
 
     /// Whether the archive has an entry (file or directory) at `path`.
@@ -943,6 +962,22 @@ mod tests {
         assert_eq!(archive.list("map").unwrap().unwrap().dirs, ["mymap"]);
         assert_eq!(archive.list("/def/world/").unwrap().unwrap().files, ["road_look.mod.sii"]);
         assert_eq!(archive.read("missing.sii").unwrap(), None);
+    }
+
+    #[test]
+    fn a_package_directory_can_be_mounted_at_the_virtual_root() {
+        let (archive, _dir) = open(&build_zip(&[
+            ("base/def/city.pr.sii", b"base cities", false),
+            ("base/prefab/pr.ppd", b"junction", true),
+            ("dlc_oversize/def/city.pr.sii", b"dlc cities", false),
+        ]));
+        let archive = archive.rooted("base");
+        assert!(archive.contains("/def/city.pr.sii"));
+        assert_eq!(archive.read("/def/city.pr.sii").unwrap().unwrap(), b"base cities");
+        assert_eq!(archive.read("prefab/pr.ppd").unwrap().unwrap(), b"junction");
+        assert_eq!(archive.list("def").unwrap().unwrap().files, ["city.pr.sii"]);
+        assert!(archive.list("").unwrap().unwrap().dirs.contains(&"prefab".into()));
+        assert!(!archive.contains("base/def/city.pr.sii"));
     }
 
     #[test]

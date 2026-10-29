@@ -43,11 +43,8 @@ use crate::profiles::{Mod, Profile};
 /// 14 (after 1.2.0): the tunnels, the roads' `tunnel` (area.rs mark_tunnels). 15 (after 2.0.3): map mods read
 /// that were left out (sectors of 895, environment areas before 901, emptied directories in protected
 /// archives) and older mods' prefabs (from version 22, skipped before); only a map that left a mod out is
-/// built again for it ([`SAME_BUT_LEFT_OUT`]).
-pub const BUILDER_VERSION: u32 = 15;
-/// The oldest builder whose maps are today's but for the mods they left out: one of those that left none out
-/// is kept (a mod's old prefabs it skipped are drawn once it's built again for another reason).
-const SAME_BUT_LEFT_OUT: u32 = 14;
+/// built again for it. 16: multi-package map definitions and split model/asset packs, including Poland Rebuilding.
+pub const BUILDER_VERSION: u32 = 16;
 
 /// The folder of the map `profile` plays, in `maps` (WestPlay's maps folder): one per map and its map mods.
 pub fn folder(maps: &Path, profile: &Profile) -> PathBuf {
@@ -80,13 +77,6 @@ pub fn needs_building(folder: &Path, source: &serde_json::Value) -> bool {
     if &built == source {
         return false;
     }
-    // Built by a builder since which only maps that left a mod out differ, and it left none: as today's.
-    let builder = built["builder"].as_u64().unwrap_or(0);
-    if (u64::from(SAME_BUT_LEFT_OUT)..u64::from(BUILDER_VERSION)).contains(&builder) && left_out(folder).is_empty() {
-        let mut as_now = built;
-        as_now["builder"] = json!(BUILDER_VERSION);
-        return &as_now != source;
-    }
     true
 }
 
@@ -105,7 +95,35 @@ fn mount_without(game: &Game, profile: &Profile, left_out: &[PathBuf]) -> Result
             continue;
         }
         if let Some(mount) = open(m)? {
+            // Multi-package SCS mods mount base first, then owned DLC overrides.
+            let roots: Vec<String> = match &mount {
+                Mount::Archive(archive) => archive.list("").ok().flatten().map(|l| l.dirs).unwrap_or_default(),
+                Mount::Folder(path) => std::fs::read_dir(path)
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .filter(|e| e.path().is_dir())
+                    .map(|e| e.file_name().to_string_lossy().into_owned())
+                    .collect(),
+            };
             files.mount(mount);
+            for root in std::iter::once("base").chain(game.dlcs.iter().map(String::as_str)) {
+                if !roots.iter().any(|r| r == root) {
+                    continue;
+                }
+                if let Some(path) = m.files.as_deref() {
+                    let mount = if path.is_dir() {
+                        Mount::Folder(path.join(root))
+                    } else {
+                        Mount::Archive(
+                            Archive::open(path)
+                                .map_err(|error| FileError { path: root.into(), mount: path.into(), error })?
+                                .rooted(root),
+                        )
+                    };
+                    files.mount(mount);
+                }
+            }
         }
     }
     Ok(files)
@@ -285,6 +303,102 @@ mod tests {
     }
 
     #[test]
+    fn mounts_package_base_and_owned_dlc_then_the_next_mod() {
+        let root = std::env::temp_dir().join(format!("westplay-packages-{}", std::process::id()));
+        let package = root.join("package");
+        for (path, value) in [
+            ("base/def/city.pr.sii", "base"),
+            ("dlc_east/def/city.pr.sii", "east"),
+            ("dlc_missing/def/city.pr.sii", "missing"),
+        ] {
+            let path = package.join(path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, value).unwrap();
+        }
+        let game = Game { dir: root.join("game"), ..game() };
+        std::fs::create_dir_all(&game.dir).unwrap();
+        let package = Mod { files: Some(package), ..a_mod("package", &[], true) };
+        let files = mount(&game, &profile("europe", vec![package.clone()])).unwrap();
+        assert_eq!(files.read("def/city.pr.sii").unwrap().unwrap(), b"east");
+        let top = root.join("top");
+        std::fs::create_dir_all(top.join("def")).unwrap();
+        std::fs::write(top.join("def/city.pr.sii"), b"top").unwrap();
+        let top = Mod { files: Some(top), ..a_mod("top", &[], true) };
+        let files = mount(&game, &profile("europe", vec![package, top])).unwrap();
+        assert_eq!(files.read("def/city.pr.sii").unwrap().unwrap(), b"top");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    #[ignore = "reads installed game and Poland Rebuilding, without changing either"]
+    fn eastern_poland_roads_resolve_with_the_real_split_packages() {
+        use westplay_mapdata::{sector, world};
+        let mods = PathBuf::from(std::env::var_os("WESTPLAY_PR_MODS").expect("WESTPLAY_PR_MODS"));
+        let game = Game::recognise(&PathBuf::from(std::env::var_os("WESTPLAY_TEST_GAME").expect("WESTPLAY_TEST_GAME")))
+            .unwrap();
+        let mut entries: Vec<_> = std::fs::read_dir(&mods)
+            .unwrap()
+            .flatten()
+            .filter(|entry| entry.file_name().to_string_lossy().contains("PL_Rebuilding"))
+            .collect();
+        entries.sort_by_key(|entry| std::cmp::Reverse(entry.file_name()));
+        // PR extends ProMods; its road templates live in the ProMods definition package.
+        let mut dependencies: Vec<_> = std::fs::read_dir(&mods)
+            .unwrap()
+            .flatten()
+            .filter(|entry| entry.file_name().to_string_lossy().starts_with("promods-eu-"))
+            .collect();
+        dependencies.sort_by_key(|entry| entry.file_name());
+        let mods: Vec<_> = dependencies
+            .iter()
+            .chain(&entries)
+            .map(|entry| crate::profiles::mod_from_files(&entry.file_name().to_string_lossy(), "PR", &entry.path()))
+            .collect();
+        let files = mount(&game, &profile("europe", mods)).unwrap();
+        let definitions = world::load_definitions(&files).unwrap();
+        let archive = Archive::open(
+            &entries.iter().find(|entry| entry.file_name().to_string_lossy().contains("_map")).unwrap().path(),
+        )
+        .unwrap();
+        let mut sectors: Vec<_> = archive
+            .list("map/europe")
+            .unwrap()
+            .unwrap()
+            .files
+            .into_iter()
+            .filter(|file| file.ends_with(".base"))
+            .collect();
+        sectors.sort_by_key(|file| std::cmp::Reverse(file[3..8].parse::<i32>().unwrap()));
+        let east = sectors[0][3..8].parse::<i32>().unwrap() - 2;
+        let mut roads = 0;
+        let mut resolved = 0;
+        for file in sectors.iter().filter(|file| file[3..8].parse::<i32>().unwrap() >= east) {
+            let bytes = archive.read(&format!("map/europe/{file}")).unwrap().unwrap();
+            for item in sector::parse(&bytes).unwrap().items {
+                if let sector::ItemData::Road { look, flags, .. } = item.data {
+                    if !flags.hidden {
+                        roads += 1;
+                        if definitions.road_looks.contains_key(&look) {
+                            resolved += 1;
+                        }
+                    }
+                }
+            }
+        }
+        println!(
+            "Eastern Poland: {resolved}/{roads} visible roads have definitions; {} prefab definitions",
+            definitions.prefab_paths.len()
+        );
+        assert!(roads > 100);
+        assert!(resolved * 100 / roads > 90);
+        let prefab = definitions
+            .prefab_paths
+            .values()
+            .find(|path| path.contains("polreb") && files.read(path).ok().flatten().is_some());
+        assert!(prefab.is_some(), "Poland Rebuilding junction assets must be mounted");
+    }
+
+    #[test]
     fn mounts_the_mod_managers_top_over_those_below() {
         // Two mods with the same file; the profile lists them from the Mod Manager's bottom up, as Eren's lists
         // ProMods' Definition Package last and the Mod Manager shows it at the top.
@@ -380,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn a_map_an_earlier_builder_made_is_built_again_only_if_it_left_a_mod_out() {
+    fn earlier_builders_are_rebuilt_even_when_no_mod_was_reported_left_out() {
         let profile = profile("europe", vec![a_mod("sud", &["europe"], true)]);
         let source = source(&game(), &profile, Some("en_us"));
         let dir = std::env::temp_dir().join(format!("westplay-map-left-out-{}", std::process::id()));
@@ -391,17 +505,19 @@ mod tests {
             std::fs::write(dir.join("map.json"), json!({ "source": built }).to_string()).unwrap();
         };
         // By the one before, none left out: kept. Anything else of it changed: built.
-        built_by(SAME_BUT_LEFT_OUT);
+        built_by(BUILDER_VERSION);
         assert!(!needs_building(&dir, &source));
         let mut updated = source.clone();
         updated["game"] = json!("1.62.0.1");
         assert!(needs_building(&dir, &updated));
-        // A mod left out: built again, to read it now.
+        // An older build omitted split packages silently: it must be rebuilt too.
+        built_by(BUILDER_VERSION - 1);
+        assert!(needs_building(&dir, &source));
         std::fs::write(dir.join(LEFT_OUT_FILE), r#"[{"name":"Sud de France","error":"unknown item type"}]"#).unwrap();
         assert!(needs_building(&dir, &source));
         std::fs::remove_file(dir.join(LEFT_OUT_FILE)).unwrap();
         // Older still: built.
-        built_by(SAME_BUT_LEFT_OUT - 1);
+        built_by(BUILDER_VERSION - 2);
         assert!(needs_building(&dir, &source));
         let _ = std::fs::remove_dir_all(dir);
     }

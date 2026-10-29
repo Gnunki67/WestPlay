@@ -81,6 +81,11 @@ screen, used with the mouse while you hold a key.
 **The companion app** on your PC sets everything up: it finds the game, installs WestPlay into it, builds your
 map, and keeps WestPlay up to date.
 
+**Radio FM and more controls.** Listen to local internet radio based on your truck's location, choose a
+Polish interface in Settings, bind music controls to a controller, and resume your last source after the
+ignition startup animation. Split map packages, including Poland Rebuilding's definitions and assets, are
+now included when preparing modded maps. See [Radio FM, language and playback controls](docs/RADIO-FM-AND-CONTROLS.md).
+
 ## How it works
 
 ```mermaid

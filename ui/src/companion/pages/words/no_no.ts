@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Volum opp',
     volumeDown: 'Volum ned',
     playPause: 'Spill av/Pause',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Trykk en tast…',
     keybindsNote:
       'Klikk på en hurtigtast, og trykk så den nye tasten. Holder du {key} nede samtidig, virker den bare mens du bruker skjermen. Esc avbryter.',

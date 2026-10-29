@@ -11,9 +11,6 @@ dist/
 /ui/public/placeholder-icons-dark/
 /ui/public/placeholder-wallpapers/
 
-# Truck brand logos (trademarks): kept out of the repository; shipped later as a removable asset pack
-/ui/public/brand-logos/
-
 # Map data exported from the developer's own game files (crates/mapdata, examples/export_area): game
 # content, never committed or shipped; players' maps are built from their own games
 /ui/public/dev-map/
@@ -26,3 +23,9 @@ dist/
 
 # Signing keys (the updater's private key stays with its owner, outside the repository)
 *.key
+
+# Local integration sources, build tools and deliverables
+/.local-radio-source/
+/tools/local-build/
+/delivery/
+/docs/LOCAL-RADIO-PL.md

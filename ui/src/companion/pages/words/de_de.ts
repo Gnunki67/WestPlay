@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Lauter',
     volumeDown: 'Leiser',
     playPause: 'Wiedergabe/Pause',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Taste drücken…',
     keybindsNote:
       'Klicke auf eine Belegung und drücke dann die neue Taste. Hältst du dabei {key}, wirkt sie nur, während du den Bildschirm nutzt. Esc bricht ab.',

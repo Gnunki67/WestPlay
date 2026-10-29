@@ -110,7 +110,7 @@ impl Command {
     fn for_page(&self) -> bool {
         match self {
             Command::Start | Command::SignIn | Command::SignOut | Command::Show { .. } | Command::Hide => false,
-            Command::Language { code } => matches!(code.as_str(), "en" | "tr"),
+            Command::Language { code } => matches!(code.as_str(), "en" | "tr" | "pl"),
             Command::Play { watch } => watch.as_ref().is_none_or(Watch::is_sound),
             Command::Like { video, .. } | Command::Queue { video, .. } => is_video_id(video),
             Command::Save { playlist, .. } => is_id(playlist),

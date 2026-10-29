@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Αύξηση έντασης',
     volumeDown: 'Μείωση έντασης',
     playPause: 'Αναπαραγωγή/Παύση',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Πατήστε ένα πλήκτρο…',
     keybindsNote:
       'Κάντε κλικ σε μια συντόμευση και πατήστε το νέο πλήκτρο. Αν κρατάτε το {key} ενώ το πατάτε, λειτουργεί μόνο όσο χρησιμοποιείτε την οθόνη. Το Esc ακυρώνει.',

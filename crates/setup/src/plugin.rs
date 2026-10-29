@@ -88,6 +88,12 @@ pub fn state(game: &Game, ours: &Path) -> io::Result<State> {
     Ok(if installed == std::fs::read(ours)? { State::Current } else { State::Different })
 }
 
+/// Local builds can share a release number while using incompatible game bridges.
+/// Always compare the installed DLL too, including a missing DLL.
+pub fn requires_update(game: &Game, ours: &Path, installed_by: Option<&str>, version: &str) -> io::Result<bool> {
+    Ok(installed_by != Some(version) || state(game, ours)? != State::Current)
+}
+
 /// Other CarPlay apps WestPlay can't share the trucks' screens with, by their plugin's file in the game's
 /// plugins folder (lower case), and the name the companion says.
 const OTHER_APPS: &[(&str, &str)] = &[
@@ -104,12 +110,10 @@ pub fn other_apps(game: &Game) -> Vec<&'static str> {
 
 fn other_apps_in(plugins: &Path) -> Vec<&'static str> {
     let Ok(entries) = std::fs::read_dir(plugins) else { return Vec::new() };
-    let names: Vec<String> = entries.flatten().map(|entry| entry.file_name().to_string_lossy().to_lowercase()).collect();
-    let mut found: Vec<&'static str> = OTHER_APPS
-        .iter()
-        .filter(|(file, _)| names.iter().any(|name| name == file))
-        .map(|(_, app)| *app)
-        .collect();
+    let names: Vec<String> =
+        entries.flatten().map(|entry| entry.file_name().to_string_lossy().to_lowercase()).collect();
+    let mut found: Vec<&'static str> =
+        OTHER_APPS.iter().filter(|(file, _)| names.iter().any(|name| name == file)).map(|(_, app)| *app).collect();
     found.dedup();
     found
 }
@@ -278,6 +282,18 @@ mod tests {
         assert_eq!(state(&game, &ours).unwrap(), State::Missing);
         uninstall(&game).unwrap();
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn detects_a_changed_or_missing_plugin_even_with_the_same_release_number() {
+        let (game, ours, root) = setup("same-version");
+        assert!(requires_update(&game, &ours, Some("2.1.3"), "2.1.3").unwrap());
+        let installed = install(&game, &ours).unwrap();
+        assert!(!requires_update(&game, &ours, Some("2.1.3"), "2.1.3").unwrap());
+        assert!(requires_update(&game, &ours, Some("2.1.2"), "2.1.3").unwrap());
+        std::fs::write(installed, b"older bridge with the same release number").unwrap();
+        assert!(requires_update(&game, &ours, Some("2.1.3"), "2.1.3").unwrap());
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

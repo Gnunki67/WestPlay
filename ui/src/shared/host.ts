@@ -87,9 +87,27 @@ export interface JobInfo {
 }
 
 /** What a keybind does: the music's volume a step up or down, or it paused or played on. */
-export type KeybindAction = 'volumeUp' | 'volumeDown' | 'playPause'
+export type KeybindAction = 'volumeUp' | 'volumeDown' | 'playPause' | 'next' | 'previous'
+
+/** The same speaker/head/camera data used by Spotify's native web player. */
+export interface CabSound {
+  head: { x: number; y: number; z: number; heading: number; pitch: number }
+  speakers:
+    | {
+        band: [number, number]
+        level: number
+        channel: 'left' | 'right' | 'both'
+        at: [number, number, number]
+        delay: number
+      }[]
+    | null
+  outside: boolean
+  distance: number
+  equalizer: Equalizer
+}
 
 export type HostMessage =
+  | ({ type: 'cabSound' } & CabSound)
   | { type: 'telemetry'; data: Telemetry }
   | { type: 'truck'; data: TruckInfo }
   | { type: 'job'; data: JobInfo }
@@ -108,6 +126,7 @@ export type HostMessage =
       /** The player's own tone curve (Settings › Equalizer), and whether it plays (Custom) or not (Recommended). */
       equalizer?: Equalizer
       equalizerCustom?: boolean
+      autoplay?: boolean
     }
   /** The player's own wallpapers and icon sets (shared/customize.ts), their files at `CABIN_FILES`. */
   | { type: 'customize'; wallpapers: CustomWallpaper[]; iconSets: IconSet[] }
@@ -276,6 +295,7 @@ export type PageMessage =
   | { type: 'truckStrip'; strip: 'auto' | 'off' }
   /** The players' tone, set in Settings › Equalizer: the player's curve, and whether it plays (Custom) or the
    * speakers as tuned (Recommended); kept with WestPlay's settings and played by every player. */
+  | { type: 'autoplay'; enabled: boolean }
   | ({ type: 'equalizer'; custom: boolean } & Equalizer)
   /** The music's spectrum wanted (Settings › Equalizer open) or not: the host answers `spectrum` as it plays. */
   | { type: 'spectrum'; on: boolean }
@@ -581,7 +601,7 @@ export type AppleMusicQuestion =
   | { ask: 'search'; query: string }
   | { ask: 'collection'; id: string }
   | { ask: 'artist'; id: string }
-  | { ask: 'library'; shelf: AppleMusicShelf; sort?: string; folder?: string; language?: 'en' | 'tr' }
+  | { ask: 'library'; shelf: AppleMusicShelf; sort?: string; folder?: string; language?: 'en' | 'tr' | 'pl' }
   | { ask: 'lyrics'; id: string }
 
 export interface AppleMusicAnswers {
@@ -637,7 +657,7 @@ export type YouTubeMusicCommand =
   | { action: 'signIn' }
   | { action: 'signOut' }
   | { action: 'ask'; id: number; question: YouTubeMusicQuestion }
-  | { action: 'language'; code: 'en' | 'tr' }
+  | { action: 'language'; code: 'en' | 'tr' | 'pl' }
   | { action: 'play'; watch?: YouTubeMusicWatch }
   | { action: 'pause' }
   | { action: 'next' }

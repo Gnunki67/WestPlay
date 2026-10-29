@@ -1,4 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
+import { useRef } from 'react'
+import { useSpeedLift } from './speedLift'
 import { formatGameTime, formatTripDistance, formatTripTime, speedKmh } from '../../shared/format'
 import { hvtMapMessage } from '../maps/blockedMap'
 import { GuidanceCard } from '../maps/GuidanceCard'
@@ -8,7 +10,7 @@ import { nextStop } from '../maps/nextStop'
 import { useMapData } from '../maps/mapData'
 import { RoadMap } from '../maps/RoadMap'
 import { useLive } from '../state/store'
-import { useText } from '../state/text'
+import { useText, useLanguage } from '../state/text'
 import './map.css'
 import { cabClock } from '../../shared/host'
 
@@ -22,11 +24,14 @@ import { cabClock } from '../../shared/host'
  * On a map WestPlay doesn't allow (by HVT), it says so instead, in the game's language.
  */
 export function MapView({ interactive = false }: { interactive?: boolean }) {
+  const language = useLanguage()
   const speed = useLive((state) => (state.telemetry ? speedKmh(state.telemetry.speed) : 0))
   const limit = useLive((state) => (state.telemetry ? speedKmh(state.telemetry.navigationSpeedLimit) : 0))
   const data = useMapData()
   const hvtMap = useLive((state) => state.hvtMap)
   const text = useText()
+  const tile = useRef<HTMLDivElement>(null)
+  useSpeedLift(tile, !interactive && !hvtMap)
 
   if (hvtMap) {
     return (
@@ -35,13 +40,13 @@ export function MapView({ interactive = false }: { interactive?: boolean }) {
           <path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5Z" />
           <path d="M9 4v13.5M15 6.5V20M3 3l18 18" />
         </svg>
-        <p>{hvtMapMessage(hvtMap.language)}</p>
+        <p>{hvtMapMessage(language === 'pl' ? 'pl_pl' : language === 'en' ? 'en_gb' : hvtMap.language)}</p>
       </div>
     )
   }
 
   return (
-    <div className="map-tile">
+    <div className="map-tile" ref={tile}>
       {data ? (
         <RoadMap data={data} interactive={interactive} />
       ) : (
@@ -109,7 +114,11 @@ function TripPill() {
   const [arrival, time, distance] = trip
   return (
     <div className="eta-pill glass">
-      <b>{arrival}</b> {text.arrival} <span className="dot">·</span> {time} <span className="dot">·</span> {distance}
+      <span className="eta-arrival">
+        <b>{arrival}</b> {text.arrival}
+      </span>
+      <span className="eta-duration">{time}</span>
+      <span className="eta-distance">{distance}</span>
     </div>
   )
 }

@@ -152,7 +152,7 @@ export function FinishUpdate({ cw, setup }: { cw: CompanionWords; setup: SetupSt
   const plugin = report?.plugin
   const administrator = plugin?.state === 'needsAdministrator' || plugin?.state === 'declined'
   const asks = administrator || plugin?.state === 'failed'
-  if (!game || done || later || !(asks || report?.modError || error)) return null
+  if (!game || done || later || !(asks || report?.modError || error || running === true)) return null
   return (
     <div className="cp-veil" onClick={working ? undefined : () => setLater(true)}>
       <section className="cp-sheet" role="dialog" aria-label={w.title} onClick={(event) => event.stopPropagation()}>

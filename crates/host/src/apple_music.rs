@@ -190,7 +190,7 @@ impl Question {
                         (1..=64).contains(&id.len()) && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'.')
                     })
                 }),
-                language: language.filter(|language| matches!(language.as_str(), "en" | "tr")),
+                language: language.filter(|language| matches!(language.as_str(), "en" | "tr" | "pl")),
             },
             // A song of Apple Music's (its number) or of the Library (`i.` and letters); else none (no words).
             Question::Lyrics { id } => {

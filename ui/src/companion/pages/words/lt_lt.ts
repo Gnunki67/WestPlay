@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Garsiau',
     volumeDown: 'Tyliau',
     playPause: 'Leisti/Pristabdyti',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Paspauskite klavišą…',
     keybindsNote:
       'Spustelėkite spartųjį klavišą ir paspauskite naują. Jei tuo metu laikote {key}, jis veiks tik naudojant ekraną. Esc atšaukia.',

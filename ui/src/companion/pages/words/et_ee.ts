@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Valjemaks',
     volumeDown: 'Vaiksemaks',
     playPause: 'Esita/Paus',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Vajuta klahvi…',
     keybindsNote:
       'Klõpsa kiirklahvil ja vajuta siis uut klahvi. Kui hoiad samal ajal all {key}, töötab see ainult ekraani kasutades. Esc tühistab.',

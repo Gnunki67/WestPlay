@@ -35,6 +35,20 @@ function player(volume: number | null, playing = false) {
 }
 
 describe('keybinds', () => {
+  it('skips tracks on the active or last source without changing volume', () => {
+    const music = player(0.65)
+    music.it.skip = (direction) => skips.push(direction)
+    const skips: number[] = []
+    const other = player(0.4)
+    const binds = keybinds([music.it, other.it])
+    music.start()
+    expect(binds.press('next')).toBeNull()
+    binds.press('playPause')
+    expect(binds.press('previous')).toBeNull()
+    expect(skips).toEqual([1, -1])
+    expect(music.state.volume).toBe(0.65)
+    expect(other.state.volume).toBe(0.4)
+  })
   it('steps the volume of the player playing here by 5%', () => {
     const spotify = player(0.5)
     const youtube = player(0.8, true)

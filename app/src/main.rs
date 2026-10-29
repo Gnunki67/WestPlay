@@ -139,6 +139,11 @@ fn key_name(key: u32) -> Option<String> {
 }
 
 #[tauri::command]
+fn controller_buttons() -> Vec<u32> {
+    westplay_host::controller::pressed()
+}
+
+#[tauri::command]
 fn get_settings(store: State<SettingsStore>) -> Settings {
     store.shared.get()
 }
@@ -201,6 +206,7 @@ fn main() {
             get_settings,
             update_settings,
             key_name,
+            controller_buttons,
             setup::setup_state,
             setup::game_running,
             setup::prepare_maps_again,

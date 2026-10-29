@@ -52,6 +52,21 @@ export function Controls({ settings: state, cw }: PageProps) {
           />
         </Group>
       )}
+      {settings && (
+        <Group title={w.autoplay} place={6}>
+          <Row
+            title={w.autoplay}
+            detail={w.autoplayDetail}
+            accessory={
+              <Switch
+                on={settings.autoplay.enabled}
+                label={w.autoplay}
+                change={(enabled) => update({ ...settings, autoplay: { enabled } })}
+              />
+            }
+          />
+        </Group>
+      )}
       {settings && <Keybinds settings={settings} update={update} w={w} />}
       {error && <Note tone="bad">{error}</Note>}
     </Panel>
@@ -77,7 +92,13 @@ function Keybinds({
   const [refused, setRefused] = useState<string | null>(null)
   const screenKey = settings.interaction.key
   const keyName = useKeyName(screenKey, words)
-  const names: Record<KeybindId, string> = { volumeUp: w.volumeUp, volumeDown: w.volumeDown, playPause: w.playPause }
+  const names: Record<KeybindId, string> = {
+    volumeUp: w.volumeUp,
+    volumeDown: w.volumeDown,
+    playPause: w.playPause,
+    next: w.next,
+    previous: w.previous,
+  }
   const listen = useCallback(
     (which: KeybindId | 'screen') => (on: boolean) => {
       setListening(on ? which : null)

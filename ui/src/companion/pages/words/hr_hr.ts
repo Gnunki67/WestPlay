@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Pojačaj',
     volumeDown: 'Utišaj',
     playPause: 'Reproduciraj/Pauziraj',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Pritisnite tipku…',
     keybindsNote:
       'Kliknite prečac, zatim pritisnite novu tipku. Ako pritom držite {key}, radi samo dok koristite zaslon. Esc odustaje.',

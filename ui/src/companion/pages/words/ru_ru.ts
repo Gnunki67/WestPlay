@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Громче',
     volumeDown: 'Тише',
     playPause: 'Воспроизведение/Пауза',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Нажмите клавишу…',
     keybindsNote:
       'Щёлкните по сочетанию и нажмите новую клавишу. Если при этом удерживать {key}, оно работает только пока вы пользуетесь экраном. Esc — отмена.',

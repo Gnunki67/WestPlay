@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { bindable, buttonOf, isModifier, keyOf, useKeyName } from '../keys'
 import type { Words } from '../onboarding/words'
 import type { Binding, KeyCode } from '../useSettings'
+import { call, IN_APP } from '../bridge'
 
 /**
  * A keybind's key, as a button: clicked, it listens, and the next key pressed (or the mouse's back or forward
@@ -103,7 +104,30 @@ export function KeyButton({
       ['blur', stop, false],
     ]
     handlers.forEach(([name, handler, capture]) => window.addEventListener(name, handler, capture))
-    return () => handlers.forEach(([name, handler, capture]) => window.removeEventListener(name, handler, capture))
+    // Native recording also sees wheels and pads that Chromium does not expose as Gamepads.
+    // Release buttons held when recording starts before accepting a new press.
+    let active = true
+    let previous: Set<number> | null = null
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const poll = async () => {
+      try {
+        const down = await call<number[]>('controller_buttons')
+        if (!active) return
+        const pressed = previous && down.find((key) => !previous!.has(key))
+        previous = new Set(down)
+        if (pressed !== null && pressed !== undefined) take(pressed)
+      } catch {
+        // Keep keyboard recording available if the native controller query fails.
+      } finally {
+        if (active) timer = setTimeout(poll, 50)
+      }
+    }
+    if (IN_APP && interactionKey !== undefined) void poll()
+    return () => {
+      active = false
+      clearTimeout(timer)
+      handlers.forEach(([name, handler, capture]) => window.removeEventListener(name, handler, capture))
+    }
   }, [listening, interactionKey, choose, listen])
 
   return (

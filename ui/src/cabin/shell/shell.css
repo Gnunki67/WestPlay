@@ -160,7 +160,8 @@ body,
 .carplay {
   position: absolute;
   inset: 0 0 var(--oem-bottom, 0px) var(--oem-left, 0px);
-  overflow: hidden;
+  /* Clip the fixed screen without letting focused list items scroll the entire dashboard. */
+  overflow: clip;
   transition:
     left var(--motion-duration) var(--motion-ease),
     bottom var(--motion-duration) var(--motion-ease),
