@@ -646,7 +646,7 @@
     songs: ['/v1/me/library/songs', { include: 'albums,catalog' }],
   }
   const RATED = { playlists: 'library-playlists', albums: 'library-albums', songs: 'library-songs' }
-  const LANGUAGES = { tr: 'tr-TR', en: 'en-GB' }
+  const LANGUAGES = { tr: 'tr-TR', en: 'en-GB', pl: 'pl-PL' }
   const PLAYLIST_SORTS = ['name', '-dateAdded', '-lastPlayed', '-updated', 'type']
 
   // The Library's playlists played lately, newest first (Apple Music's Recently Played of them, private ones

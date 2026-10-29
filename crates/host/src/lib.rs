@@ -11,11 +11,13 @@ mod camera;
 mod capture;
 mod cursor;
 pub mod customize;
+pub use westplay_shared::controller;
 pub mod fitted;
 mod game_settings;
 mod gpu;
 pub mod graphics;
 mod handover;
+mod local_server;
 mod lyrics;
 pub mod maps;
 mod performance;
@@ -67,7 +69,7 @@ pub const TEST_PAGE: &str = include_str!("test_page.html");
 pub enum Content {
     Url(String),
     Html(String),
-    /// A built UI folder, served at `https://westplay.cabin/` through a WebView2 virtual host.
+    /// A built UI folder, served on loopback HTTP by the integrated cabin/Local Radio server.
     Folder {
         root: PathBuf,
         page: String,
@@ -246,20 +248,27 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
     let webview = OffscreenWebView::new(&stage, config.width, config.height, &config.data_dir.join("webview2"))?;
     stage.add(&webview, true)?;
     startup::mark("host: cabin browser (WebView2) ready");
-    match &config.content {
-        Content::Url(url) => webview.navigate(url)?,
-        Content::Html(html) => webview.navigate_to_string(html)?,
-        Content::Folder { root, page } => {
-            webview.map_folder("westplay.cabin", root)?;
-            webview.navigate(&format!("https://westplay.cabin/{page}"))?;
+    let _local_server = match &config.content {
+        Content::Url(url) => {
+            webview.navigate(url)?;
+            None
         }
-    }
+        Content::Html(html) => {
+            webview.navigate_to_string(html)?;
+            None
+        }
+        Content::Folder { root, page } => {
+            let server = local_server::LocalServer::start(root)?;
+            webview.navigate(&format!("{}/{page}", server.url))?;
+            Some(server)
+        }
+    };
     startup::mark("host: cabin page requested");
     // What WestPlay costs while the game runs, in the log each minute (performance.rs).
     let mut meter = performance::Meter::new(match &config.content {
         Content::Url(url) => performance::host_of(url).unwrap_or_default(),
         Content::Html(_) => String::new(),
-        Content::Folder { .. } => "westplay.cabin".to_string(),
+        Content::Folder { .. } => "127.0.0.1".to_string(),
     });
     // The player's maps, built from their game (maps.rs), for the cab's Maps app.
     let maps_dir = config.data_dir.join("maps");
@@ -789,6 +798,14 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
                     let mut settings = config.settings.get();
                     if settings.screen.truck_strip != strip {
                         settings.screen.truck_strip = strip;
+                        config.settings.set(settings.clone());
+                        (config.on_settings)(&settings);
+                    }
+                }
+                Some(PageMessage::Autoplay { enabled }) => {
+                    let mut settings = config.settings.get();
+                    if settings.autoplay.enabled != enabled {
+                        settings.autoplay.enabled = enabled;
                         config.settings.set(settings.clone());
                         (config.on_settings)(&settings);
                     }
@@ -1743,6 +1760,8 @@ fn keybind_message(keybind: Keybind) -> String {
         Keybind::VolumeUp => "volumeUp",
         Keybind::VolumeDown => "volumeDown",
         Keybind::PlayPause => "playPause",
+        Keybind::Next => "next",
+        Keybind::Previous => "previous",
     };
     serde_json::json!({ "type": "keybind", "action": action }).to_string()
 }
@@ -1887,6 +1906,7 @@ fn settings_message(settings: &settings::Settings) -> String {
         "iconStyle": settings.look.icon_style,
         "equalizer": settings.sound.equalizer.clamped(),
         "equalizerCustom": settings.sound.custom,
+        "autoplay": settings.autoplay.enabled,
     })
     .to_string()
 }
@@ -1906,13 +1926,21 @@ enum PageMessage {
     /// Posted when the page (re)loads.
     Ready,
     /// A startup stage the page reached (the boot screens shown), for the startup log (`startup`).
-    Startup { stage: String },
+    Startup {
+        stage: String,
+    },
     /// Whether WestPlay is open on the truck's screen: posted as the page loads and whenever it changes.
-    Westplay { open: bool },
+    Westplay {
+        open: bool,
+    },
     /// The wallpaper chosen in the cab's Settings (an id: `wallpapers.ts`), to keep with the settings.
-    Wallpaper { id: String },
+    Wallpaper {
+        id: String,
+    },
     /// The truck's information bar beside WestPlay, kept or not, chosen in the cab's Settings (Appearance).
-    TruckStrip { strip: settings::TruckStrip },
+    TruckStrip {
+        strip: settings::TruckStrip,
+    },
     /// The players' tone, set in the cab's Settings (Equalizer): the player's curve (bass, mid and treble, dB
     /// each), and whether it plays (Custom) or the speakers as tuned (Recommended).
     Equalizer {
@@ -1923,32 +1951,62 @@ enum PageMessage {
     },
     /// The music's spectrum wanted (the cab's Equalizer open) or not: the players measure it, and it's passed
     /// on to the page as they say it.
-    Spectrum { on: bool },
+    Spectrum {
+        on: bool,
+    },
+    Autoplay {
+        enabled: bool,
+    },
     /// Whether what's under the cursor is light (it's drawn dark there: `cursor`).
-    CursorLight { light: bool },
+    CursorLight {
+        light: bool,
+    },
     /// A command for YouTube's player (`youtube`): what to play, where it shows, and so on.
-    Youtube { command: youtube::Command },
+    Youtube {
+        command: youtube::Command,
+    },
     /// A command for Spotify's web player (`spotify`): its sign-in, a question, its controls.
-    Spotify { command: spotify::Command },
+    Spotify {
+        command: spotify::Command,
+    },
     /// A command for Apple Music's web player (`appleMusic`): its sign-in, a question, its controls.
-    AppleMusic { command: apple_music::Command },
+    AppleMusic {
+        command: apple_music::Command,
+    },
     /// A command for YouTube Music's web player (`youtubeMusic`): its sign-in, a question, its controls.
-    YoutubeMusic { command: youtube_music::Command },
+    YoutubeMusic {
+        command: youtube_music::Command,
+    },
     /// The text field selected on the page, a number that changes with every selection (0: none), for the
     /// player's own keyboard to type into (`typing`).
-    Typing { selection: u32 },
+    Typing {
+        selection: u32,
+    },
     /// A change to the game's route (Maps' search): at a map node (its uid in hex) to go or add a stop; `id`
     /// comes back with the game's answer (`route_change`).
-    Route { id: u32, action: PageRouteAction, node: Option<String> },
+    Route {
+        id: u32,
+        action: PageRouteAction,
+        node: Option<String>,
+    },
     /// The routes to a map node (its uid in hex) from where the truck is, to offer before Go (`planner`);
     /// `id` comes back with them.
-    Routes { id: u32, node: String },
+    Routes {
+        id: u32,
+        node: String,
+    },
     /// Go along the route at `index` of those offered for request `id`: handed to the game's GPS
     /// (`handover`); `{"type":"followed"}` comes back once the game follows it, or won't.
-    Follow { id: u32, index: usize },
+    Follow {
+        id: u32,
+        index: usize,
+    },
     /// What stopping at each of these map nodes (uids in hex) would add to the trip the game's route makes
     /// (`planner`); `{"type":"detours"}` comes back with `id`.
-    Detours { id: u32, nodes: Vec<String> },
+    Detours {
+        id: u32,
+        nodes: Vec<String>,
+    },
 }
 
 /// A route being handed to the game's GPS: the page's request, the hand-over (the route picked and the
@@ -2280,6 +2338,7 @@ mod tests {
                 "iconStyle": "auto",
                 "equalizer": { "bass": 0, "mid": 0, "treble": 0 },
                 "equalizerCustom": false,
+                "autoplay": true,
             })
         );
         settings.screen.truck_strip = crate::settings::TruckStrip::Off;

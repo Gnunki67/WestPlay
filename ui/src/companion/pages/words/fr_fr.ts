@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Volume +',
     volumeDown: 'Volume −',
     playPause: 'Lecture/Pause',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Appuyez sur une touche…',
     keybindsNote:
       'Cliquez sur un raccourci, puis appuyez sur sa nouvelle touche. Maintenez {key} en même temps, et il ne marche que lorsque vous utilisez l’écran. Échap annule.',

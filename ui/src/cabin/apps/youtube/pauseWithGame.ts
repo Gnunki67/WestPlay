@@ -1,6 +1,6 @@
 import type { YouTubeState } from '../../../shared/host'
 import { type MusicPlayer, pauseMusicWithGame } from '../musicWithGame'
-import { command, setVolume, useYouTube } from './youtube'
+import { play as playVideo, nextVideo, previousVideo, command, setVolume, useYouTube } from './youtube'
 
 /** A video playing, or about to (buffering). */
 function isPlaying(state: YouTubeState | null): boolean {
@@ -10,6 +10,10 @@ function isPlaying(state: YouTubeState | null): boolean {
 /** YouTube as one of the cab's players (oneAtATime.ts). */
 export const youtubePlayer: MusicPlayer = {
   name: 'youtube',
+  skip: (direction) => {
+    const video = direction === 1 ? nextVideo() : previousVideo()
+    if (video) playVideo(video)
+  },
   playingHere: () => isPlaying(useYouTube.getState().state),
   pauseHere: () => command({ action: 'pause' }),
   resumeHere: () => command({ action: 'play' }),

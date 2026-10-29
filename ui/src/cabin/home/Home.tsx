@@ -19,7 +19,8 @@ export function Home() {
   const [page, setPage] = useState(0)
   // The labels grow with the player's Text Size, and the cells with them.
   const scale = textScale(useCabin((state) => state.textSize))
-  const names = useText().apps
+  const text = useText()
+  const names = text.apps
   // Each app's label's lines as drawn (a long name takes two): the rows are as tall as their names need.
   const [lines, setLines] = useState<Partial<Record<AppId, number>>>({})
 
@@ -84,7 +85,7 @@ export function Home() {
   }
 
   return (
-    <section className="screen home" aria-label="Home">
+    <section className="screen home" aria-label={text.shell.home}>
       <div
         ref={pagesElement}
         className={size.compact ? 'home-pages compact' : 'home-pages'}

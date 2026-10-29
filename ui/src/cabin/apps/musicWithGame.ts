@@ -1,5 +1,5 @@
 import { type LiveState, useCabin, useLive } from '../state/store'
-import { fadeOutAndPause, playAndFadeIn } from './fade'
+import { fadeOutAndPause, playAndFadeIn, stopFade, levelOf } from './fade'
 import { poweredOff, withGame } from './youtube/withGame'
 
 /**
@@ -16,6 +16,7 @@ export interface MusicPlayer {
   playingHere(): boolean
   pauseHere(): void
   resumeHere(): void
+  skip?(direction: 1 | -1): void
   /** The volume it plays at here (0 to 1), as the player chose it; `null` if there's none to set. */
   volume(): number | null
   /** Sets the volume it plays at (0 to 1) without making it the player's choice: for a fade. */
@@ -35,7 +36,7 @@ function isAway(live: LiveState): boolean {
 /** The truck's electrics are off (as seen: not before the first telemetry says so). */
 function isOff(): boolean {
   const { power } = useCabin.getState()
-  return power.observed && power.phase === 'off'
+  return power.observed && power.phase !== 'on'
 }
 
 /** Pauses `player` with the game, and stops it as the truck's electrics go off, from now on. Returns the
@@ -57,6 +58,10 @@ export function pauseMusicWithGame(player: MusicPlayer): () => void {
   })
   const power = useCabin.subscribe((cabin, before) => {
     if (!poweredOff(before.power.phase === 'off', cabin.power.phase === 'off')) return
+    const fading = levelOf(player.name) !== undefined
+    stopFade(player.name)
+    const volume = player.volume()
+    if (fading && volume !== null) player.sendVolume(volume)
     // Whatever it's doing, at once (no fade: owner 2026-10-21), and not played on after.
     if (player.playingHere()) player.pauseHere()
     paused = false

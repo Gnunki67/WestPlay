@@ -411,7 +411,7 @@ impl ModFiles {
                 .iter()
                 .any(|file| kinds.iter().any(|kind| file.starts_with(&format!("{kind}.")) && file.ends_with(".sii")))
         };
-        let definitions =
+        let mut definitions =
             defines(&self.list("def").1, &MAP_DEFINITIONS) || defines(&self.list("def/world").1, &WORLD_DEFINITIONS);
         // An archive listing no folder at its root hides them (a folder or a zip always shows its own): it may
         // hold the map's models (ProMods' do), unless its manifest says what it is and that isn't a map (a
@@ -419,6 +419,18 @@ impl ModFiles {
         let categories = self.categories();
         let not_a_map =
             !categories.is_empty() && !categories.iter().any(|category| category.eq_ignore_ascii_case("map"));
+        let roots = self.list("").0;
+        // Map packages also carry junctions and models without any sector or top-level .sii.
+        // Poland Rebuilding keeps its definitions under base/ and DLC-specific directories.
+        if !not_a_map {
+            definitions |= roots.iter().any(|root| {
+                matches!(root.as_str(), "prefab" | "prefab2" | "road_template" | "model" | "model2" | "modpl")
+            });
+            for root in roots.iter().filter(|root| root.as_str() == "base" || root.starts_with("dlc_")) {
+                definitions |= defines(&self.list(&format!("{root}/def")).1, &MAP_DEFINITIONS)
+                    || defines(&self.list(&format!("{root}/def/world")).1, &WORLD_DEFINITIONS);
+            }
+        }
         let hidden = matches!(self, Self::Archive(_)) && self.list("").0.is_empty() && !not_a_map;
         MapContent { sectors, definitions, hidden }
     }
@@ -427,6 +439,47 @@ impl ModFiles {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[ignore = "reads installed Poland Rebuilding archives"]
+    fn inspect_poland_rebuilding() {
+        let dir = std::env::var_os("WESTPLAY_PR_MODS").expect("WESTPLAY_PR_MODS");
+        let mut count = 0;
+        for entry in std::fs::read_dir(dir).unwrap().flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if !name.contains("PL_Rebuilding") {
+                continue;
+            }
+            let files = ModFiles::open(&entry.path()).unwrap();
+            let content = files.map_content();
+            assert!(!content.sectors.is_empty() || content.definitions || content.hidden, "package omitted: {name}");
+            println!("{name}: {content:?}; base definitions {:?}", files.list("base/def/world"));
+            count += 1;
+        }
+        assert_eq!(count, 4);
+    }
+
+    #[test]
+    fn recognises_split_map_assets_and_package_definitions() {
+        for (name, path) in [
+            ("pr-def", "base/def/world/prefab.pr.sii"),
+            ("pr-models", "model2/building/pr.pmd"),
+            ("pr-assets", "prefab/pr/junction.ppd"),
+        ] {
+            let root = mod_folder(name, &[(path, "data")]);
+            assert!(mod_from_files(name, name, &root).affects_map("europe"), "{name}");
+            std::fs::remove_dir_all(root).unwrap();
+        }
+        let root = mod_folder(
+            "truck-models",
+            &[
+                ("model/truck.pmd", "data"),
+                ("manifest.sii", "SiiNunit\n{\nmod_package : .package\n{\n category[]: truck\n}\n}\n"),
+            ],
+        );
+        assert!(!mod_from_files("truck", "truck", &root).affects_map("europe"));
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     /// The mods installed on this PC for its game (the Documents folder's `mod` and the Workshop), printed.
     #[test]

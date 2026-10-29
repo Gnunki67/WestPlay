@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Volum mai tare',
     volumeDown: 'Volum mai încet',
     playPause: 'Redare/Pauză',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Apasă o tastă…',
     keybindsNote:
       'Dă clic pe o tastă rapidă, apoi apasă noua tastă. Dacă ții apăsat {key} în timp ce o apeși, merge doar cât folosești ecranul. Esc anulează.',

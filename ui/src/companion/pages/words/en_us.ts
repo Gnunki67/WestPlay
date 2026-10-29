@@ -94,9 +94,13 @@ export const words: CompanionWords = {
     volumeUp: 'Volume up',
     volumeDown: 'Volume down',
     playPause: 'Play/Pause',
-    pressKey: 'Press a key…',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
+    pressKey: 'Press a key or controller button…',
     keybindsNote:
-      'Click a keybind, then press its new key. Hold {key} as you press it, and it works only while you use the screen. Esc cancels.',
+      'Click a volume or playback shortcut, then press a key or a wheel/gamepad button. Hold {key} as you press it to use it only with the screen. Esc cancels. Keep controller buttons unassigned in the game.',
     inUse: 'That key is already used for {action}.',
   },
   accounts: {

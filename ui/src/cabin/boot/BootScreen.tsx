@@ -12,9 +12,10 @@ import './boot.css'
  * - `off`: black (the game hides the screen anyway while the electrics are off).
  */
 export function BootScreen({ phase }: { phase: Exclude<PowerPhase, 'on'> }) {
+  const brand = useLive((state) => state.truck?.brandId)
   return (
     <div className={`boot boot-${phase}`} aria-hidden>
-      {phase === 'splash' && <BrandSplash />}
+      {phase === 'splash' && <BrandSplash key={brand} />}
       {phase === 'connecting' && <WestPlayIntro />}
     </div>
   )
@@ -41,8 +42,8 @@ function logoSources(brandId: string, brand: string): LogoSource[] {
 }
 
 /**
- * The truck brand's logo. Logos are their makers' trademarks, so they live outside the repository
- * (`public/brand-logos`, git-ignored); when a brand has none, its name is shown as a wordmark instead.
+ * The truck brand's logo, from the removable `public/brand-logos` asset pack.
+ * Logos remain their makers' trademarks; a missing logo falls back to the brand's name.
  */
 function BrandSplash() {
   const truck = useLive((state) => state.truck)

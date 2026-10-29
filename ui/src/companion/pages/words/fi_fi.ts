@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Äänenvoimakkuus ylös',
     volumeDown: 'Äänenvoimakkuus alas',
     playPause: 'Toista/Tauko',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Paina näppäintä…',
     keybindsNote:
       'Napsauta pikanäppäintä ja paina sitten uutta näppäintä. Jos pidät samalla {key} pohjassa, se toimii vain näyttöä käyttäessäsi. Esc peruuttaa.',

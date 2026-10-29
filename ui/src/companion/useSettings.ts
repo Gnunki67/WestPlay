@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 /** The player's settings. Mirrors `westplay_host::settings::Settings`; the app owns and saves them. */
 export interface Settings {
+  autoplay: { enabled: boolean }
   interaction: {
     /** The key that uses the screen. */
     key: KeyCode
@@ -56,10 +57,10 @@ export const DEFAULT_KEY = KEY_PRESETS.leftAlt
 export type InteractionMode = 'hold' | 'toggle'
 
 /** Mirrors `westplay_host::settings::Keybinds`: the playing music's volume up and down, and play/pause. */
-export type KeybindId = 'volumeUp' | 'volumeDown' | 'playPause'
+export type KeybindId = 'volumeUp' | 'volumeDown' | 'playPause' | 'next' | 'previous'
 
 /** In a row as their default keys are (1, 2, 3), as on a stereo: volume down, play/pause, volume up. */
-export const KEYBIND_IDS: KeybindId[] = ['volumeDown', 'playPause', 'volumeUp']
+export const KEYBIND_IDS: KeybindId[] = ['volumeDown', 'playPause', 'volumeUp', 'previous', 'next']
 
 /** Mirrors `westplay_host::settings::Binding`: a key, pressed alone or while using the screen (holding its
  * key, or toggled on). */

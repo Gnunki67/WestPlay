@@ -3,16 +3,18 @@ import type { ReturnKind } from '../keyboard/layouts'
 import type { TurnKind } from '../maps/guidance'
 import type { DestinationKind } from '../maps/places'
 import type { AppId } from './apps'
+import { POLISH } from './polish'
 
 /**
- * The cabin's own words, in English and Turkish for now (every one of the game's 43 languages later):
- * Turkish when the game plays in Turkish, English otherwise. Place names on the map come from the game's
+ * The cabin's own words in English, Polish and Turkish. Radio FM can override the game's language.
+ * Place names on the map come from the game's
  * own text in its language (crates/mapdata locale.rs), not from here.
  */
 
-export type Language = 'en' | 'tr'
+export type Language = 'en' | 'tr' | 'pl'
 
 export interface Strings {
+  shell: { home: string; dashboard: string; recentApps: string; truckScreen: string }
   /** The decimal separator: "9.4 km", "9,4 km". */
   decimal: string
   /** The trip pill: "15:40 arrival · 12 min · 9.4 km". */
@@ -431,6 +433,10 @@ export interface Strings {
   }
   /** The Settings app: its pages, rows and the words under them. */
   settings: {
+    language: string
+    languageFooter: string
+    autoplay: string
+    autoplayFooter: string
     appearance: string
     light: string
     dark: string
@@ -467,7 +473,9 @@ export interface Strings {
 const ENGLISH_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth']
 
 export const STRINGS: Record<Language, Strings> = {
+  pl: POLISH,
   en: {
+    shell: { home: 'Home', dashboard: 'Dashboard', recentApps: 'Recent apps', truckScreen: 'Truck screen' },
     decimal: '.',
     arrival: 'arrival',
     minutes: (minutes) => `${minutes} min`,
@@ -909,6 +917,10 @@ export const STRINGS: Record<Language, Strings> = {
       unavailable: 'The weather shows while the game runs.',
     },
     settings: {
+      language: 'Language',
+      autoplay: 'Automatic playback',
+      autoplayFooter: 'Resume the last music source after the boot animation when the ignition turns on.',
+      languageFooter: 'The selected language applies to all WestPlay apps and is remembered for the next drive.',
       appearance: 'Appearance',
       light: 'Light',
       dark: 'Dark',
@@ -940,6 +952,7 @@ export const STRINGS: Record<Language, Strings> = {
       spotify: 'Spotify',
       youtube: 'YouTube',
       youtubeMusic: 'YouTube Music',
+      localRadio: 'Radio FM',
       podcasts: 'Podcasts',
       phone: 'Phone',
       messages: 'Messages',
@@ -949,6 +962,12 @@ export const STRINGS: Record<Language, Strings> = {
     notBuiltYet: 'Not built yet',
   },
   tr: {
+    shell: {
+      home: 'Ana Sayfa',
+      dashboard: 'Gösterge Paneli',
+      recentApps: 'Son uygulamalar',
+      truckScreen: 'Araç ekranı',
+    },
     decimal: ',',
     arrival: 'varış',
     minutes: (minutes) => `${minutes} dk`,
@@ -1394,6 +1413,10 @@ export const STRINGS: Record<Language, Strings> = {
       unavailable: 'Hava durumu oyun açıkken görünür.',
     },
     settings: {
+      language: 'Dil',
+      autoplay: 'Otomatik oynatma',
+      autoplayFooter: 'Kontak açıldığında başlangıç animasyonundan sonra son müzik kaynağını sürdür.',
+      languageFooter: 'Seçilen dil tüm WestPlay uygulamalarına uygulanır ve bir sonraki sürüş için kaydedilir.',
       appearance: 'Görünüm',
       light: 'Açık',
       dark: 'Koyu',
@@ -1425,6 +1448,7 @@ export const STRINGS: Record<Language, Strings> = {
       spotify: 'Spotify',
       youtube: 'YouTube',
       youtubeMusic: 'YouTube Music',
+      localRadio: 'Radio FM',
       podcasts: 'Podcast’ler',
       phone: 'Telefon',
       messages: 'Mesajlar',
@@ -1437,5 +1461,6 @@ export const STRINGS: Record<Language, Strings> = {
 
 /** The cabin's language for the game's (its `g_lang_init`, e.g. `tr_tr`; `null` until known). */
 export function languageOf(gameLanguage: string | null): Language {
-  return gameLanguage?.toLowerCase().startsWith('tr') ? 'tr' : 'en'
+  const code = gameLanguage?.toLowerCase()
+  return code?.startsWith('pl') ? 'pl' : code?.startsWith('tr') ? 'tr' : 'en'
 }

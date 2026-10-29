@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Hangerő fel',
     volumeDown: 'Hangerő le',
     playPause: 'Lejátszás/Szünet',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Nyomj meg egy billentyűt…',
     keybindsNote:
       'Kattints egy parancsra, majd nyomd meg az új billentyűt. Ha közben nyomva tartod a(z) {key} billentyűt, csak a képernyő használata közben működik. Az Esc mégsem.',

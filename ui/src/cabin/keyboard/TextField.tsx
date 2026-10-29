@@ -1,7 +1,5 @@
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { useLive } from '../state/store'
-import { languageOf } from '../state/strings'
-import { useText } from '../state/text'
+import { useText, useLanguage } from '../state/text'
 import type { ReturnKind } from './layouts'
 import { type Typing, useKeyboard } from './store'
 
@@ -41,7 +39,7 @@ export function TextField({
 }: TextFieldProps) {
   const text = useText()
   const typing = useKeyboard((state) => state.field?.id === id)
-  const language = languageOf(useLive((state) => state.gameLanguage))
+  const language = useLanguage()
 
   // The newest props, for the keyboard to call; and the text as last written, so keys pressed faster than
   // the page redraws (the player's own keyboard) each build on the one before.

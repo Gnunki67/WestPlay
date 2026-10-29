@@ -42,6 +42,10 @@ export function keybinds(players: readonly MusicPlayer[]): {
         else player.resumeHere()
         return null
       }
+      if (action === 'next' || action === 'previous') {
+        player.skip?.(action === 'next' ? 1 : -1)
+        return null
+      }
       const volume = player.volume()
       if (volume === null) return null
       stopFade(player.name)

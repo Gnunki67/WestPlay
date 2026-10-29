@@ -43,7 +43,7 @@ export function YouTubeMusicApp() {
   // The tab Search was opened from: closing Search goes back to it.
   const [before, setBefore] = useState<Tab>('home')
   const typing = useKeyboard((state) => state.field?.id === FIELD)
-  useWebPlayer(language === 'tr' ? 'tr' : 'en')
+  useWebPlayer(language)
   useSongsEnd()
   // A play YouTube Music didn't confirm: said.
   const unplayed = useYouTubeMusic((state) => state.unplayed)

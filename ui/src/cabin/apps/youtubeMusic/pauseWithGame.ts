@@ -1,9 +1,10 @@
 import { type MusicPlayer, pauseMusicWithGame } from '../musicWithGame'
-import { pauseNow, playingNow, resumeNow, setVolume, useYouTubeMusic, youtubeMusic } from './youtubeMusic'
+import { skip, pauseNow, playingNow, resumeNow, setVolume, useYouTubeMusic, youtubeMusic } from './youtubeMusic'
 
 /** YouTube Music as one of the cab's players (musicWithGame.ts, oneAtATime.ts). */
 export const youtubeMusicPlayer: MusicPlayer = {
   name: 'youtube music',
+  skip,
   playingHere: playingNow,
   pauseHere: pauseNow,
   resumeHere: resumeNow,

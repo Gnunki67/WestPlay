@@ -33,6 +33,19 @@ pub struct Settings {
     pub graphics: GraphicsSettings,
     #[serde(deserialize_with = "lenient")]
     pub sound: SoundSettings,
+    #[serde(deserialize_with = "lenient")]
+    pub autoplay: AutoplaySettings,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct AutoplaySettings {
+    pub enabled: bool,
+}
+impl Default for AutoplaySettings {
+    fn default() -> Self {
+        Self { enabled: true }
+    }
 }
 
 /// The sound the players play: its tone (the cab's Settings › Equalizer), the same in every truck. As iOS's
@@ -131,7 +144,7 @@ impl KeyCode {
 
     /// A virtual-key code, if it's one (1 to 254).
     pub fn new(code: u32) -> Option<Self> {
-        (1..=0xfe).contains(&code).then_some(Self(code))
+        ((1..=0xfe).contains(&code) || westplay_shared::controller::decode(code).is_some()).then_some(Self(code))
     }
 
     /// The Windows virtual-key code the plugin checks.
@@ -142,6 +155,9 @@ impl KeyCode {
     /// A keyboard key's name as Windows gives it for the player's keyboard ("Right Ctrl", "Num 4", "Q"):
     /// the companion's keybinds. `None` for a mouse button, or a key Windows has no name for.
     pub fn name(code: u32) -> Option<String> {
+        if let Some(name) = westplay_shared::controller::name(code) {
+            return Some(name);
+        }
         use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyNameTextW, MAPVK_VK_TO_VSC_EX, MapVirtualKeyW};
         // SAFETY: plain queries; the buffer is a local the call writes within its length.
         unsafe {
@@ -202,6 +218,8 @@ pub struct Keybinds {
     pub volume_up: Binding,
     pub volume_down: Binding,
     pub play_pause: Binding,
+    pub next: Binding,
+    pub previous: Binding,
 }
 
 impl<'de> Deserialize<'de> for Keybinds {
@@ -217,6 +235,8 @@ impl<'de> Deserialize<'de> for Keybinds {
             volume_up: binding("volumeUp", defaults.volume_up),
             volume_down: binding("volumeDown", defaults.volume_down),
             play_pause: binding("playPause", defaults.play_pause),
+            next: binding("next", defaults.next),
+            previous: binding("previous", defaults.previous),
         })
     }
 }
@@ -226,7 +246,13 @@ impl Default for Keybinds {
     /// row as on a stereo (owner 2026-10-21): volume down, play/pause between, volume up.
     fn default() -> Self {
         let with_key = |code| Binding { key: KeyCode(code), with_interaction_key: true };
-        Self { volume_down: with_key(0x31), play_pause: with_key(0x32), volume_up: with_key(0x33) }
+        Self {
+            volume_down: with_key(0x31),
+            play_pause: with_key(0x32),
+            volume_up: with_key(0x33),
+            previous: with_key(0x34),
+            next: with_key(0x35),
+        }
     }
 }
 
@@ -238,6 +264,8 @@ impl Keybinds {
                 Keybind::VolumeUp => self.volume_up,
                 Keybind::VolumeDown => self.volume_down,
                 Keybind::PlayPause => self.play_pause,
+                Keybind::Next => self.next,
+                Keybind::Previous => self.previous,
             };
             keybind_value(binding.key.virtual_key(), binding.with_interaction_key)
         })
@@ -447,6 +475,7 @@ mod tests {
                 icon_style: IconStyle::Dark,
             },
             graphics: GraphicsSettings { gpu: Some("10de:2702:00000000:161".into()) },
+            autoplay: AutoplaySettings::default(),
             sound: SoundSettings {
                 equalizer: crate::speakers::Equalizer { bass: -3, mid: 1, treble: 2 },
                 custom: true,
@@ -462,6 +491,10 @@ mod tests {
 
     #[test]
     fn missing_settings_take_their_defaults() {
+        assert!(parse("{}").unwrap().autoplay.enabled);
+        let disabled = parse(r#"{"autoplay":{"enabled":false}}"#).unwrap();
+        assert!(!disabled.autoplay.enabled);
+        assert_eq!(parse(&to_json(&disabled)).unwrap(), disabled);
         assert_eq!(parse(r#"{"version": 1}"#).unwrap(), Settings::default());
         let partial = parse(r#"{"version": 1, "interaction": {"sensitivity": 2.0}}"#).unwrap();
         assert_eq!(partial.interaction.key, KeyCode::LEFT_ALT);
@@ -478,6 +511,21 @@ mod tests {
         assert_eq!(partial.screen.truck_strip, TruckStrip::Auto);
         // And from before the GPU was: WestPlay picks it.
         assert_eq!(partial.graphics.gpu, None);
+    }
+
+    #[test]
+    fn controller_bindings_round_trip_through_settings_and_the_game_bridge() {
+        let code = westplay_shared::controller::BASE + 2 * 64 + 31;
+        let mut settings = Settings::default();
+        settings.keybinds.volume_up = Binding { key: KeyCode::new(code).unwrap(), with_interaction_key: false };
+        let json = serde_json::to_string(&settings).unwrap();
+        let read: Settings = serde_json::from_str(&json).unwrap();
+        assert_eq!(read.keybinds.volume_up, settings.keybinds.volume_up);
+        assert_eq!(
+            westplay_shared::keybind_of(read.keybinds.bridge_values()[Keybind::VolumeUp as usize]),
+            Some((code, false))
+        );
+        assert!(KeyCode::new(westplay_shared::controller::BASE + 36).is_none());
     }
 
     #[test]

@@ -3,6 +3,20 @@
 What changed in each release of WestPlay. The newest release's notes are what the app shows when it offers the
 update.
 
+## Unreleased
+
+- Added Radio FM inside WestPlay. It finds nearby transmitters from the truck's location and plays local internet stations, with favourites, automatic tuning and reception effects.
+- Gave Radio FM a WestPlay-style interface, larger station rows and a dashboard widget whose logos fit correctly.
+- Added Polish across the cabin interface, including navigation, weather, settings and music controls. English and Polish can be selected in Settings, and Polish keyboard characters are available.
+- Added controller bindings for volume and playback, plus previous and next track bindings beside the existing music shortcuts. In Radio FM, these change stations.
+- Added automatic playback after the ignition startup animation. WestPlay remembers the last source, station or track, with one shared switch in the cabin Settings app and desktop Controls page.
+- Improved modded map loading. WestPlay now includes split models, assets and definitions stored in base and DLC folders, making roads from maps such as Poland Rebuilding visible.
+- Fixed plugin updates between builds with the same version number. WestPlay now checks the installed DLL too and explains when ETS2 needs to close before it can be replaced.
+- Fixed packaged startup so the companion loads its included interface without a development server, and added the integrated loopback server used by Radio FM.
+- Restored the truck startup logo pack, including Volvo, and reset logo loading when the truck brand changes.
+- Fixed scrolling when selecting radio stations, and kept radio playback and its widget working when switching apps.
+- Kept standard online services and signed release update checks enabled.
+
 ## 2.1.3 (2026-10-27)
 - The WestPlay tablet has a new look: a slim aluminium tablet with a black glass front, at a real tablet's size
   (24.8 x 17.9 cm), WestPlay laid out in the shape of its screen. The tablet's model is Art_bor's (Sketchfab,

@@ -582,6 +582,7 @@ impl OffscreenWebView {
     }
 
     /// Serves `folder` at `https://{host_name}/`, to the page served from it.
+    #[cfg(test)]
     pub fn map_folder(&self, host_name: &str, folder: &Path) -> windows::core::Result<()> {
         self.serve(host_name, folder, false)
     }
@@ -812,8 +813,8 @@ mod tests {
             console.error = (...a) => { __errors.push('console: ' + a.map(String).join(' ')); error(...a) };"#,
         )
         .unwrap();
-        view.map_folder("westplay.cabin", Path::new(&ui)).unwrap();
-        view.navigate("https://westplay.cabin/cabin.html").unwrap();
+        let local = crate::local_server::LocalServer::start(Path::new(&ui)).unwrap();
+        view.navigate(&format!("{}/cabin.html", local.url)).unwrap();
         // As the host goes on (crate::run): the maps' and the player's own looks' folders, mapped as the page loads.
         for (host, name) in [("westplay.maps", "maps"), ("westplay.customize", "customize")] {
             let dir = std::env::temp_dir().join(format!("westplay-built-cab-{name}-{}", std::process::id()));
@@ -832,6 +833,8 @@ mod tests {
             )
             .unwrap();
         println!("page messages: {:?}\n{state}", view.take_page_messages());
+        assert!(state.contains("\"shell\":true"), "the packaged cabin must render: {state}");
+        assert!(state.contains("\"errors\":[]"), "the packaged cabin must have no script errors: {state}");
     }
 
     /// Signing out: a cookie set by a page is gone once `delete_cookies` comes back, for the page loaded right

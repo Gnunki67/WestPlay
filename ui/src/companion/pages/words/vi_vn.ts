@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'Tăng âm lượng',
     volumeDown: 'Giảm âm lượng',
     playPause: 'Phát/Tạm dừng',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Nhấn một phím…',
     keybindsNote:
       'Nhấp vào một phím tắt, rồi nhấn phím mới. Nếu giữ {key} khi nhấn, phím tắt chỉ hoạt động khi bạn đang dùng màn hình. Esc để hủy.',

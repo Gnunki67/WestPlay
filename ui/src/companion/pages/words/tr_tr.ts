@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Sesi aç',
     volumeDown: 'Sesi kıs',
     playPause: 'Oynat/Duraklat',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Bir tuşa bas…',
     keybindsNote:
       'Bir tuş atamasına tıkla, sonra yeni tuşuna bas. Basarken {key} tuşunu basılı tutarsan yalnızca ekranı kullanırken çalışır. Esc iptal eder.',

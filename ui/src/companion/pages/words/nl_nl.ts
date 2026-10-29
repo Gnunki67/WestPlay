@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Volume omhoog',
     volumeDown: 'Volume omlaag',
     playPause: 'Afspelen/Pauze',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Druk op een toets…',
     keybindsNote:
       'Klik op een sneltoets en druk dan op de nieuwe toets. Houd je daarbij {key} ingedrukt, dan werkt hij alleen terwijl je het scherm gebruikt. Esc annuleert.',

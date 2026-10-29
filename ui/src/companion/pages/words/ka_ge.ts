@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: 'ხმის აწევა',
     volumeDown: 'ხმის დაწევა',
     playPause: 'დაკვრა/პაუზა',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'დააჭირეთ კლავიშს…',
     keybindsNote:
       'დააწკაპუნეთ მინიჭებაზე და დააჭირეთ ახალ კლავიშს. თუ ამ დროს {key}-ს გეჭირებათ, ის მხოლოდ ეკრანის გამოყენებისას იმუშავებს. Esc აუქმებს.',

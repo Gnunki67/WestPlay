@@ -8,7 +8,7 @@ import { nextStop } from '../maps/nextStop'
 import { useMapData } from '../maps/mapData'
 import { RoadMap } from '../maps/RoadMap'
 import { useLive } from '../state/store'
-import { useText } from '../state/text'
+import { useText, useLanguage } from '../state/text'
 import './map.css'
 import { cabClock } from '../../shared/host'
 
@@ -22,6 +22,7 @@ import { cabClock } from '../../shared/host'
  * On a map WestPlay doesn't allow (by HVT), it says so instead, in the game's language.
  */
 export function MapView({ interactive = false }: { interactive?: boolean }) {
+  const language = useLanguage()
   const speed = useLive((state) => (state.telemetry ? speedKmh(state.telemetry.speed) : 0))
   const limit = useLive((state) => (state.telemetry ? speedKmh(state.telemetry.navigationSpeedLimit) : 0))
   const data = useMapData()
@@ -35,7 +36,7 @@ export function MapView({ interactive = false }: { interactive?: boolean }) {
           <path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5Z" />
           <path d="M9 4v13.5M15 6.5V20M3 3l18 18" />
         </svg>
-        <p>{hvtMapMessage(hvtMap.language)}</p>
+        <p>{hvtMapMessage(language === 'pl' ? 'pl_pl' : language === 'en' ? 'en_gb' : hvtMap.language)}</p>
       </div>
     )
   }

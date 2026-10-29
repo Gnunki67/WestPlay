@@ -799,17 +799,19 @@ export function useNow(running: boolean): number {
 
 /** While the app is open: YouTube Music's web player runs (hidden, under the page), answering in the cab's
  * language, and says whether it's signed in. */
-export function useWebPlayer(language: 'en' | 'tr'): void {
-  useEffect(() => {
-    if (!isInHost()) return
-    // The volume kept from last time, for when the player says its own (receivePlayback).
-    volumeToGiveBack = true
-    youtubeMusic({ action: 'start' })
-  }, [])
+export function useWebPlayer(language: 'en' | 'tr' | 'pl'): void {
+  useEffect(() => startWebPlayer(), [])
   useEffect(() => {
     if (!isInHost()) return
     youtubeMusic({ action: 'language', code: language })
     // Answers in the other language are another's.
     asking.clear()
   }, [language])
+}
+
+/** Start from either the app or ignition, restoring the chosen volume in both cases. */
+export function startWebPlayer(): void {
+  if (!isInHost()) return
+  volumeToGiveBack = true
+  youtubeMusic({ action: 'start' })
 }

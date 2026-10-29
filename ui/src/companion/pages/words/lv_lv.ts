@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Skaļāk',
     volumeDown: 'Klusāk',
     playPause: 'Atskaņot/Pauze',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Nospiediet taustiņu…',
     keybindsNote:
       'Noklikšķiniet uz īsinājuma un nospiediet jauno taustiņu. Ja tikmēr turat {key}, tas darbojas tikai, kamēr lietojat ekrānu. Esc atceļ.',

@@ -7,7 +7,9 @@ import { pickVariant, prepareWallpaper } from '../../wallpapers'
 import { type Appearance, resolveAppearance } from '../../state/appearance'
 import { useLook, useScreenProfile } from '../../state/hooks'
 import { DASHBOARD_WIDGETS, type DashboardWidget, useCabin, useLive } from '../../state/store'
-import { useText } from '../../state/text'
+import { useText, useLanguage } from '../../state/text'
+import { GlobeGlyph } from '../../keyboard/glyphs'
+import { chooseLanguage } from '../../state/language'
 import { TEXT_SIZES } from '../../state/textSize'
 import {
   AppearanceGlyph,
@@ -48,6 +50,8 @@ function PageContent({ page }: { page: SettingsPage }) {
   switch (page) {
     case 'list':
       return <ListPage />
+    case 'language':
+      return <LanguagePage />
     case 'appearance':
       return <AppearancePage />
     case 'wallpaper':
@@ -74,13 +78,26 @@ function useWantedAppearance(): Appearance {
 }
 
 function ListPage() {
+  const autoplay = useCabin((state) => state.autoplay)
+  const setAutoplay = useCabin((state) => state.setAutoplay)
+  const language = useLanguage()
   const text = useText()
   const open = useSettings((state) => state.open)
   const mode = useCabin((state) => state.appearanceMode)
   const wanted = useWantedAppearance()
   return (
     <Page title={text.apps.settings} list>
+      <Group footer={text.settings.autoplayFooter}>
+        <SwitchRow label={text.settings.autoplay} on={autoplay} onToggle={setAutoplay} />
+      </Group>
       <Group>
+        <NavRow
+          tile="var(--apple-blue)"
+          icon={<GlobeGlyph />}
+          label={text.settings.language}
+          value={language === 'pl' ? 'Polski' : 'English'}
+          onOpen={() => open('language')}
+        />
         <NavRow
           tile="var(--apple-blue)"
           icon={<AppearanceGlyph />}
@@ -116,6 +133,21 @@ function ListPage() {
           label={text.settings.sound}
           onOpen={() => open('sound')}
         />
+      </Group>
+    </Page>
+  )
+}
+
+function LanguagePage() {
+  const text = useText()
+  const language = useLanguage()
+  return (
+    <Page title={text.settings.language}>
+      <Group footer={text.settings.languageFooter}>
+        <div role="radiogroup" aria-label={text.settings.language}>
+          <CheckRow label="English" on={language === 'en'} onPick={() => chooseLanguage('en')} />
+          <CheckRow label="Polski" on={language === 'pl'} onPick={() => chooseLanguage('pl')} />
+        </div>
       </Group>
     </Page>
   )

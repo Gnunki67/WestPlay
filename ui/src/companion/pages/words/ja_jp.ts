@@ -94,6 +94,10 @@ export const words: CompanionWords = {
     volumeUp: '音量を上げる',
     volumeDown: '音量を下げる',
     playPause: '再生/一時停止',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'キーを押してください…',
     keybindsNote:
       '割り当てをクリックして、新しいキーを押します。{key}を押しながら押すと、画面を操作している間だけ使えます。Escでキャンセル。',

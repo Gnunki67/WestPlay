@@ -93,6 +93,10 @@ export const words: CompanionWords = {
     volumeUp: 'Zosilniť',
     volumeDown: 'Stíšiť',
     playPause: 'Prehrať/Pozastaviť',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Stlačte kláves…',
     keybindsNote:
       'Kliknite na skratku a stlačte nový kláves. Ak pritom držíte {key}, funguje len pri používaní obrazovky. Esc zruší.',

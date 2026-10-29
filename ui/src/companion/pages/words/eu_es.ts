@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Igo bolumena',
     volumeDown: 'Jaitsi bolumena',
     playPause: 'Erreproduzitu/Pausatu',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Sakatu tekla bat…',
     keybindsNote:
       'Egin klik lasterbide batean eta sakatu tekla berria. Sakatzean {key} eusten badiozu, pantaila erabiltzen duzun bitartean bakarrik dabil. Esc-ek bertan behera uzten du.',

@@ -95,6 +95,10 @@ export const words: CompanionWords = {
     volumeUp: 'Apujar el volum',
     volumeDown: 'Abaixar el volum',
     playPause: 'Reproduir/Pausa',
+    next: 'Next track',
+    previous: 'Previous track',
+    autoplay: 'Automatic playback',
+    autoplayDetail: 'Resume the last music source after the boot animation when the ignition turns on.',
     pressKey: 'Prem una tecla…',
     keybindsNote:
       'Fes clic en una drecera i prem la tecla nova. Si mantens {key} mentre la prems, només funciona mentre fas servir la pantalla. Esc cancel·la.',

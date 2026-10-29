@@ -27,6 +27,7 @@ import { weatherView } from './weather'
 import { WeatherGlyph } from './WeatherGlyph'
 import { EMPTY, useDestinationView, useGuided } from './widgetState'
 import { cabClock } from '../../shared/host'
+import { nextRadio, toggleRadio } from '../apps/localRadio/radio'
 
 /**
  * Now Playing: what plays, the video YouTube plays first (VideoWidget), then the Spotify app's music, then
@@ -35,13 +36,25 @@ import { cabClock } from '../../shared/host'
  */
 export function NowPlayingWidget() {
   const shown = useCabin((state) => state.dashboardWidgets.nowPlaying)
-  const { showing, spotify, appleMusic, youtubeMusic } = useNowPlaying()
+  const { showing, spotify, appleMusic, youtubeMusic, localRadio } = useNowPlaying()
   return (
     <div className={`widget-slot${shown ? ' open' : ''}`}>
       {shown && showing === 'video' && <VideoWidget />}
       {shown && showing === 'spotify' && spotify && <SpotifyWidget spotify={spotify} />}
       {shown && showing === 'appleMusic' && appleMusic && <AppleMusicWidget appleMusic={appleMusic} />}
       {shown && showing === 'youtubeMusic' && youtubeMusic && <YouTubeMusicWidget youtubeMusic={youtubeMusic} />}
+      {shown && showing === 'localRadio' && localRadio && (
+        <MusicWidget
+          source={localRadio}
+          artwork={localRadio.artwork}
+          onOpen={() => go({ type: 'openApp', app: 'localRadio' })}
+          onControl={(action) => {
+            if (action === 'playPause') toggleRadio()
+            else if (action === 'next') nextRadio(1)
+            else if (action === 'previous') nextRadio(-1)
+          }}
+        />
+      )}
       {shown && showing === null && <MusicWidget source={null} artwork={null} onControl={() => {}} />}
     </div>
   )
@@ -128,7 +141,7 @@ function MusicWidget({
   const text = useText()
 
   return (
-    <article className="widget glass now-playing">
+    <article className={`widget glass now-playing${source?.service === 'localRadio' ? ' radio-now-playing' : ''}`}>
       <Crossfade value={cover} className="np-tint" render={(url) => url && <img src={url} alt="" aria-hidden />} />
       <button type="button" className="np-top" onClick={onOpen} disabled={!onOpen}>
         <Crossfade

@@ -10,6 +10,10 @@ publish.workspace = true
 name = "westplay"
 path = "src/main.rs"
 
+[features]
+# Tauri's packaged window must use embedded assets instead of build.devUrl.
+custom-protocol = ["tauri/custom-protocol"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
