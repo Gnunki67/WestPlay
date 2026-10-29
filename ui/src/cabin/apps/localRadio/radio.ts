@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import Hls from 'hls.js'
+import { isInHost } from '../../../shared/host'
+import { attachRadioSound, updateRadioSound, tickRadioSound } from './cabSound'
 import type { MediaSource } from '../../../shared/media'
 import type { MusicPlayer } from '../musicWithGame'
 import { useLive } from '../../state/store'
@@ -102,6 +104,7 @@ function player(): HTMLAudioElement {
   audio.preload = 'none'
   noise = new Audio('/local-radio/static.mp3')
   noise.loop = true
+  attachRadioSound(audio, noise)
   audio.addEventListener('playing', () => {
     if (!requested) {
       audio?.pause()
@@ -162,7 +165,7 @@ export function tune(country: string, station: Station, play = true, automatic =
   // Preserve supplied HTTP URLs: many FM streams do not have an HTTPS endpoint.
   if (/\.m3u8(?:[?#]|$)/i.test(station.url) && Hls.isSupported()) {
     hls = new Hls()
-    hls.loadSource(station.url)
+    hls.loadSource(streamUrl(station.url))
     hls.attachMedia(element)
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       if (ticket === generation && requested) void playAudio(ticket)
@@ -171,7 +174,7 @@ export function tune(country: string, station: Station, play = true, automatic =
       if (data.fatal && ticket === generation) fail('hls')
     })
   } else {
-    element.src = station.url
+    element.src = streamUrl(station.url)
     if (play) void playAudio(ticket)
   }
 }
@@ -276,8 +279,11 @@ function updateLocation() {
 /** Mounted for the life of the cabin, so playback and location continue outside the Radio screen. */
 export function followRadio(): () => void {
   void loadRadio()
+  updateRadioSound(useLive.getState().cabSound)
+  const soundTimer = setInterval(tickRadioSound, 50)
   let last = 0
   const stop = useLive.subscribe((now, before) => {
+    if (now.cabSound !== before.cabSound) updateRadioSound(now.cabSound)
     if (
       (now.telemetry === null && before.telemetry !== null) ||
       (now.telemetry !== before.telemetry && performance.now() - last > 750)
@@ -288,10 +294,16 @@ export function followRadio(): () => void {
   })
   return () => {
     stop()
+    clearInterval(soundTimer)
     pauseRadio()
     hls?.destroy()
     hls = null
   }
+}
+
+/** Same-origin streams can enter Web Audio even when a station does not allow CORS. */
+export function streamUrl(url: string): string {
+  return isInHost() ? `${location.origin}/radio-stream?url=${encodeURIComponent(url)}` : url
 }
 export const radioPlayer: MusicPlayer = {
   name: 'localRadio',

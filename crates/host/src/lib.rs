@@ -25,6 +25,7 @@ mod planner;
 mod play_log;
 mod player;
 mod pointer;
+mod radio_relay;
 pub mod route;
 mod route_change;
 pub mod settings;
@@ -246,6 +247,7 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
         log!("the cab is drawn on {}", graphics::name_of(luid, &adapters).unwrap_or_default());
     }
     let webview = OffscreenWebView::new(&stage, config.width, config.height, &config.data_dir.join("webview2"))?;
+    webview.add_startup_script(include_str!("cab_sound.js"))?;
     stage.add(&webview, true)?;
     startup::mark("host: cabin browser (WebView2) ready");
     let _local_server = match &config.content {
@@ -309,6 +311,7 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
     let mut menu_gone = false;
     // Whether the camera was outside the cab, as last said in the log.
     let mut was_outside = false;
+    let mut radio_sound_told: Option<String> = None;
     // The players' tone (the cab's Settings › Equalizer), passed on with the cab ([`settings::SoundSettings`]).
     let mut equalizer = config.settings.get().sound.playing();
     // The music's spectrum wanted by the cab (its Equalizer open): asked of the players with the cab.
@@ -745,6 +748,7 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
                     last_truck = None;
                     last_job = None;
                     last_layout = None;
+                    radio_sound_told = None;
                     typing_state = None;
                     let route = route_message
                         .iter()
@@ -1444,6 +1448,19 @@ pub fn run(mut config: Config, stop: Arc<AtomicBool>) -> Result<(), Error> {
             }
             if let Some(player) = &spotify {
                 let _ = player.cab(truck_speakers, head, outside, distance, equalizer, spectrum);
+            }
+            // Radio FM runs in the cabin page, with the same speaker graph as the service players.
+            if head.is_sound() {
+                let message = serde_json::json!({
+                    "type": "cabSound", "head": head, "speakers": truck_speakers,
+                    "outside": outside, "distance": if outside { (distance * 4.0).round() / 4.0 } else { 0.0 },
+                    "equalizer": equalizer,
+                })
+                .to_string();
+                if radio_sound_told.as_ref() != Some(&message) {
+                    let _ = webview.post_json(&message);
+                    radio_sound_told = Some(message);
+                }
             }
         }
 

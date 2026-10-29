@@ -3,6 +3,7 @@
 /* The map follows the appearance (dark map in dark mode, daytime map in light mode); the whole screen
    crossfades as it changes (state/launch.ts). */
 .map-tile {
+  container: map-tile / inline-size;
   --map-ground: #374d64;
   position: relative;
   flex: 1;
@@ -87,6 +88,36 @@
   font-weight: 500;
   color: #fff;
   background: rgb(20 22 26 / 0.55);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 12px;
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.eta-pill > span + span::before {
+  content: '·';
+  margin-right: 12px;
+  opacity: 0.6;
+}
+.eta-pill > span {
+  min-width: 0;
+  max-width: 100%;
+}
+.eta-duration {
+  white-space: normal;
+}
+
+/* Arrival stays at the bottom. The speed pair lifts only if rendered text overlaps it. */
+.dashboard .eta-pill {
+  top: auto;
+  bottom: 24px;
+  width: max-content;
+  font-size: calc(24px * var(--text-scale, 1));
+  padding: 10px 24px;
 }
 
 .appearance-light .eta-pill {
@@ -107,7 +138,7 @@
 .speed-stack {
   position: absolute;
   left: 22px;
-  bottom: 22px;
+  bottom: calc(22px + var(--speed-lift, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -126,7 +157,7 @@
   border: 7px solid #e3141b;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
   color: #111;
-  font-size: calc(25px * var(--text-scale, 1));
+  font-size: 25px;
   font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -191,11 +222,11 @@
 
 /* The Dashboard's map on a short screen (the 7" Scania's, its UI scaled up: about 395 x 400 in its own
    units): the arrival pill, the speeds and the zoom pair don't fit side by side along its bottom (owner
-   2026-10-21: they overlapped). The pill goes to the top, where nothing else is, and all three are smaller. */
+   2026-10-21: they overlapped). All three are smaller; the speed pair moves above the arrival pill only when needed. */
 @container carplay (max-height: 520px) {
   .dashboard .eta-pill {
-    top: 14px;
-    bottom: auto;
+    top: auto;
+    bottom: 14px;
     padding: 6px 14px;
     font-size: calc(17px * var(--text-scale, 1));
   }
@@ -206,7 +237,7 @@
 
   .dashboard .speed-stack {
     left: 14px;
-    bottom: 14px;
+    bottom: calc(14px + var(--speed-lift, 0px));
     gap: 8px;
   }
 
@@ -214,13 +245,13 @@
     width: 46px;
     height: 46px;
     border-width: 5px;
-    font-size: calc(18px * var(--text-scale, 1));
+    font-size: 18px;
   }
 
   .dashboard .speed-badge {
     width: 52px;
     height: 52px;
-    font-size: calc(21px * var(--text-scale, 1));
+    font-size: 21px;
   }
 
   .dashboard .map-controls {
@@ -244,5 +275,39 @@
 
   .dashboard .map-zoom-divider {
     width: 24px;
+  }
+}
+
+@container map-tile (max-width: 520px) {
+  .eta-pill {
+    font-size: calc(17px * var(--text-scale, 1));
+    gap: 3px 8px;
+    padding: 7px 12px;
+    border-radius: 18px;
+  }
+  .eta-arrival {
+    flex-basis: 100%;
+  }
+  .eta-pill > .eta-duration::before {
+    content: none;
+  }
+  .eta-pill > .eta-distance::before {
+    margin-right: 8px;
+  }
+  .speed-limit {
+    width: 52px;
+    height: 52px;
+    border-width: 5px;
+    font-size: 22px;
+  }
+  .speed-badge {
+    width: 58px;
+    height: 58px;
+    font-size: 25px;
+  }
+  .speed-stack {
+    left: 14px;
+    bottom: calc(14px + var(--speed-lift, 0px));
+    gap: 8px;
   }
 }

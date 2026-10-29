@@ -7,6 +7,8 @@ update.
 
 - Added Radio FM inside WestPlay. It finds nearby transmitters from the truck's location and plays local internet stations, with favourites, automatic tuning and reception effects.
 - Gave Radio FM a WestPlay-style interface, larger station rows and a dashboard widget whose logos fit correctly.
+- Added the same 3D cabin sound as Spotify to Radio FM, including the truck's speakers, head movement, equalizer, muffling outside the cab and distance fade.
+- Fixed the Polish dashboard map widget so arrival details, speed and speed limits stay separate, including at larger text sizes.
 - Added Polish across the cabin interface, including navigation, weather, settings and music controls. English and Polish can be selected in Settings, and Polish keyboard characters are available.
 - Added controller bindings for volume and playback, plus previous and next track bindings beside the existing music shortcuts. In Radio FM, these change stations.
 - Added automatic playback after the ignition startup animation. WestPlay remembers the last source, station or track, with one shared switch in the cabin Settings app and desktop Controls page.

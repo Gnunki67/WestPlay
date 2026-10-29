@@ -1,4 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
+import { useRef } from 'react'
+import { useSpeedLift } from './speedLift'
 import { formatGameTime, formatTripDistance, formatTripTime, speedKmh } from '../../shared/format'
 import { hvtMapMessage } from '../maps/blockedMap'
 import { GuidanceCard } from '../maps/GuidanceCard'
@@ -28,6 +30,8 @@ export function MapView({ interactive = false }: { interactive?: boolean }) {
   const data = useMapData()
   const hvtMap = useLive((state) => state.hvtMap)
   const text = useText()
+  const tile = useRef<HTMLDivElement>(null)
+  useSpeedLift(tile, !interactive && !hvtMap)
 
   if (hvtMap) {
     return (
@@ -42,7 +46,7 @@ export function MapView({ interactive = false }: { interactive?: boolean }) {
   }
 
   return (
-    <div className="map-tile">
+    <div className="map-tile" ref={tile}>
       {data ? (
         <RoadMap data={data} interactive={interactive} />
       ) : (
@@ -110,7 +114,11 @@ function TripPill() {
   const [arrival, time, distance] = trip
   return (
     <div className="eta-pill glass">
-      <b>{arrival}</b> {text.arrival} <span className="dot">·</span> {time} <span className="dot">·</span> {distance}
+      <span className="eta-arrival">
+        <b>{arrival}</b> {text.arrival}
+      </span>
+      <span className="eta-duration">{time}</span>
+      <span className="eta-distance">{distance}</span>
     </div>
   )
 }

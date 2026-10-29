@@ -8,6 +8,10 @@ Open **Radio FM** from Home or the Now Playing widget. Choose a station, save a 
 
 The interface follows WestPlay's design. Station rows are larger, and station logos fit completely inside the dashboard widget.
 
+Radio FM and reception static use the same 3D speaker engine as Spotify. The sound follows the truck's speaker layout and the driver's head, uses the cabin equalizer, becomes muffled outside the cab, and fades to silence at 20 metres. A same-origin relay supports stations that do not provide CORS headers. It only accepts database station URLs and media URLs referenced by their HLS playlists, including segments and encryption keys.
+
+The dashboard map keeps arrival details at the bottom. Speed and speed limits move up together only when the rendered text overlaps them. The position follows text size and width, and returns to normal when the text becomes shorter or the route ends.
+
 The integrated server starts with WestPlay and listens only on `127.0.0.1:18331`. It serves the packaged interface and allows stations that still use HTTP. No separate Local Radio server or telemetry plugin is needed. Stations require internet access; individual streams may become unavailable.
 
 Data, station images, static audio and adapted reception logic come from [ETS2/ATS Local Radio](https://github.com/Koenvh1/ets2-local-radio). Licenses and credits are included in `ui/public/local-radio`. To import another copy of its source data, run `node tools/import-local-radio.mjs path/to/ets2-local-radio-master` from the repository root.
@@ -43,6 +47,8 @@ The installed `westplay.dll` is compared with the packaged DLL even when both bu
 Use the normal Tauri release process, or run `powershell -File tools/build-local.ps1 -Name WestPlay-RadioFM` with Node/npm and the Windows Rust toolchain installed. Release builds require `westplay-app/custom-protocol` so the companion loads its packaged assets instead of a development server. The packaging helper checks that the truck brand logo pack, including Volvo, is present. Missing brand logos otherwise fall back to a wordmark.
 
 Normal release builds retain WestPlay's existing online services and signed update checks. This integration does not change update endpoints or signature verification. Development builds keep their existing no-update behaviour.
+
+For a private package without WestPlay update checks, pass `-Offline` to the packaging helper, or set `WESTPLAY_OFFLINE_BUILD=1` only for that build. Without this explicit option, release update checks remain enabled. Radio streams and third-party music/weather services still need their normal internet connections.
 
 ## Validation
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import {
   type Equalizer,
+  type CabSound,
   FLAT,
   type HostMessage,
   type GameWeather,
@@ -289,6 +290,7 @@ export interface LiveState {
   spectrum: readonly number[]
   /** The host draws the screen's cursor (`cursor` message): the page draws none of its own then. */
   cursorByHost: boolean
+  cabSound: CabSound | null
 }
 
 /** TruckersMP's players around the player, from its SDK: its game server's id, the player's own number on it,
@@ -322,6 +324,7 @@ export const useLive = create<LiveState>()(() => ({
   nearby: null,
   spectrum: [],
   cursorByHost: false,
+  cabSound: null,
 }))
 
 /** Plain browser previews have no game to report the screen: `?layout=scania-2025` stands in for it. */
@@ -368,6 +371,9 @@ export function connectHost(now: () => number = () => performance.now()): () => 
 function receiveHostMessage(now: () => number): (message: HostMessage) => void {
   return (message) => {
     switch (message.type) {
+      case 'cabSound':
+        useLive.setState({ cabSound: message })
+        break
       case 'telemetry': {
         const previous = useLive.getState().telemetry
         useLive.setState({ telemetry: message.data })

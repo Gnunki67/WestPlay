@@ -89,7 +89,25 @@ export interface JobInfo {
 /** What a keybind does: the music's volume a step up or down, or it paused or played on. */
 export type KeybindAction = 'volumeUp' | 'volumeDown' | 'playPause' | 'next' | 'previous'
 
+/** The same speaker/head/camera data used by Spotify's native web player. */
+export interface CabSound {
+  head: { x: number; y: number; z: number; heading: number; pitch: number }
+  speakers:
+    | {
+        band: [number, number]
+        level: number
+        channel: 'left' | 'right' | 'both'
+        at: [number, number, number]
+        delay: number
+      }[]
+    | null
+  outside: boolean
+  distance: number
+  equalizer: Equalizer
+}
+
 export type HostMessage =
+  | ({ type: 'cabSound' } & CabSound)
   | { type: 'telemetry'; data: Telemetry }
   | { type: 'truck'; data: TruckInfo }
   | { type: 'job'; data: JobInfo }

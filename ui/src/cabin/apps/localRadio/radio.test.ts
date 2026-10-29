@@ -28,6 +28,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   AudioStub.instances = []
   vi.stubGlobal('Audio', AudioStub)
+  vi.stubGlobal('window', {})
   vi.stubGlobal('localStorage', { getItem: () => null, setItem: vi.fn() })
 })
 afterEach(() => {
@@ -38,6 +39,14 @@ afterEach(() => {
 const station = { name: 'Test FM', url: 'https://example.test/radio.mp3' }
 
 describe('Local Radio playback lifecycle', () => {
+  it('uses a same-origin stream inside the host so stations without CORS can use 3D audio', async () => {
+    vi.stubGlobal('window', { chrome: { webview: {} } })
+    vi.stubGlobal('location', { origin: 'http://127.0.0.1:18331', search: '' })
+    const radio = await import('./radio')
+    expect(radio.streamUrl(station.url)).toBe(
+      `http://127.0.0.1:18331/radio-stream?url=${encodeURIComponent(station.url)}`,
+    )
+  })
   it('lets the volume slider take over after a game fade', async () => {
     const radio = await import('./radio')
     radio.tune('poland', station)

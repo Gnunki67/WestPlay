@@ -17,10 +17,19 @@ pub struct LocalServer {
 
 impl LocalServer {
     pub fn start(root: &Path) -> std::io::Result<Self> {
+        Self::start_at(root, 18331)
+    }
+    #[cfg(test)]
+    pub fn start_for_test(root: &Path) -> std::io::Result<Self> {
+        Self::start_at(root, 0)
+    }
+    fn start_at(root: &Path, port: u16) -> std::io::Result<Self> {
         // Stable origin keeps the player's radio favourites and cabin preferences between runs.
-        let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 18331))?;
+        let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port))?;
+        let url = format!("http://127.0.0.1:{}", listener.local_addr()?.port());
         listener.set_nonblocking(true)?;
         let root = root.canonicalize()?;
+        let radio = Arc::new(crate::radio_relay::RadioRelay::new(&root)?);
         let stopped = Arc::new(AtomicBool::new(false));
         let stop = stopped.clone();
         let active = Arc::new(AtomicUsize::new(0));
@@ -32,10 +41,11 @@ impl LocalServer {
                             continue;
                         }
                         let root = root.clone();
+                        let radio = radio.clone();
                         let active = active.clone();
                         active.fetch_add(1, Ordering::AcqRel);
                         let _ = std::thread::spawn(move || {
-                            if let Err(error) = serve(stream, &root) {
+                            if let Err(error) = serve(stream, &root, &radio) {
                                 log!("[local-server] request failed: {error}");
                                 #[cfg(test)]
                                 eprintln!("local server: {error}");
@@ -50,7 +60,7 @@ impl LocalServer {
                 }
             }
         })?;
-        Ok(Self { stopped, thread: Some(thread), url: "http://127.0.0.1:18331".into() })
+        Ok(Self { stopped, thread: Some(thread), url })
     }
 }
 impl Drop for LocalServer {
@@ -82,7 +92,7 @@ fn resolve(root: &Path, request: &str) -> Option<PathBuf> {
     let path = root.join(relative).canonicalize().ok()?;
     (path.starts_with(root) && path.is_file()).then_some(path)
 }
-fn serve(mut stream: TcpStream, root: &Path) -> std::io::Result<()> {
+fn serve(mut stream: TcpStream, root: &Path, radio: &crate::radio_relay::RadioRelay) -> std::io::Result<()> {
     // Windows inherits the listener's nonblocking mode on accepted sockets.
     stream.set_nonblocking(false)?;
     stream.set_read_timeout(Some(Duration::from_secs(3)))?;
@@ -104,9 +114,16 @@ fn serve(mut stream: TcpStream, root: &Path) -> std::io::Result<()> {
     let method = first.next().unwrap_or("");
     let target = first.next().unwrap_or("");
     // Reject DNS rebinding and methods with side effects; serve only the packaged UI directory.
-    let host_ok = header.lines().any(|line| line.eq_ignore_ascii_case("Host: 127.0.0.1:18331"));
+    let expected_host = format!("Host: 127.0.0.1:{}", stream.local_addr()?.port());
+    let host_ok = header.lines().any(|line| line.eq_ignore_ascii_case(&expected_host));
     if !host_ok || !matches!(method, "GET" | "HEAD") {
         return stream.write_all(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    }
+    if target.starts_with("/radio-stream?") {
+        let range = header.lines().find_map(|line| {
+            line.split_once(':').filter(|(name, _)| name.eq_ignore_ascii_case("range")).map(|(_, value)| value.trim())
+        });
+        return radio.serve(&mut stream, target, method, range);
     }
     let Some(path) = resolve(root, target) else {
         return stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
